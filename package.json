@@ -3,10 +3,14 @@
   "version": "1.0.0",
   "description": "DarFest 2026 Result Platform with Telegram Integration",
   "main": "server.js",
+  "bin": {
+    "npmstart": "./npmstart"
+  },
   "scripts": {
-    "start": "python3 backend/server.py",
-    "npmstart": "python3 backend/server.py",
-    "build": "echo 'Build complete'"
+    "start": "node server.js",
+    "npmstart": "node server.js",
+    "build": "mkdir -p node_modules/.bin && cp npmstart node_modules/.bin/npmstart && chmod +x node_modules/.bin/npmstart || true",
+    "postinstall": "mkdir -p node_modules/.bin && cp npmstart node_modules/.bin/npmstart && chmod +x node_modules/.bin/npmstart || true"
   },
   "keywords": ["artfest", "darfest", "telegram-bot"],
   "author": "Jabir Vettan",

@@ -1,2 +1,20 @@
-#!/usr/bin/env bash
-python3 backend/server.py
+#!/usr/bin/env node
+const { spawn } = require('child_process');
+const path = require('path');
+
+console.log('🚀 Starting DarFest 2026 Backend Server...');
+
+const scriptPath = path.join(__dirname, 'backend', 'server.py');
+const py = spawn('python3', [scriptPath], {
+  stdio: 'inherit',
+  env: process.env
+});
+
+py.on('error', (err) => {
+  console.error('Failed to launch python backend:', err);
+  process.exit(1);
+});
+
+py.on('close', (code) => {
+  process.exit(code || 0);
+});
