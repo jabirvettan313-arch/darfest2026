@@ -160,6 +160,7 @@ const app = {
 
   async refreshData() {
     this.showToast('Refreshing live data...', 'info');
+    this.state.allResultsCache = null;
     await this.fetchInitialData();
     this.renderTicker();
     this.handleRoute();
@@ -390,26 +391,58 @@ const app = {
   // ==========================================
   async renderResultsView() {
     const main = document.getElementById('appMain');
-    let results = [];
-    let totalCount = 0;
-
-    try {
-      let queryParams = new URLSearchParams();
-      if (this.state.selectedCategoryFilter) queryParams.set('category_id', this.state.selectedCategoryFilter);
-      if (this.state.selectedHouseFilter) queryParams.set('house_id', this.state.selectedHouseFilter);
-      if (this.state.selectedTypeFilter) queryParams.set('type', this.state.selectedTypeFilter);
-      if (this.state.selectedFormatFilter) queryParams.set('format', this.state.selectedFormatFilter);
-      if (this.state.resultSearchQuery) queryParams.set('search', this.state.resultSearchQuery);
-      if (this.state.resultSortBy) queryParams.set('sort', this.state.resultSortBy);
-
-      const res = await fetch(`${API_BASE}/results?${queryParams.toString()}`).then(r => r.json());
-      if (res.success) {
-        results = res.results;
-        totalCount = res.total_count || results.length;
+    
+    // Fetch once and cache
+    if (!this.state.allResultsCache) {
+      try {
+        const res = await fetch(`${API_BASE}/results`).then(r => r.json());
+        if (res.success) {
+          this.state.allResultsCache = res.results;
+        } else {
+          this.state.allResultsCache = [];
+        }
+      } catch (e) {
+        console.error(e);
+        this.state.allResultsCache = [];
       }
-    } catch (e) {
-      console.error(e);
     }
+
+    let results = [...this.state.allResultsCache];
+
+    // Client-side filtering
+    if (this.state.selectedCategoryFilter) {
+      results = results.filter(r => String(r.category_id) === String(this.state.selectedCategoryFilter));
+    }
+    if (this.state.selectedHouseFilter) {
+      results = results.filter(r => r.winners.some(w => String(w.house_id) === String(this.state.selectedHouseFilter)));
+    }
+    if (this.state.selectedTypeFilter) {
+      results = results.filter(r => r.programme_type === this.state.selectedTypeFilter);
+    }
+    if (this.state.selectedFormatFilter) {
+      results = results.filter(r => r.format === this.state.selectedFormatFilter);
+    }
+    if (this.state.resultSearchQuery) {
+      const q = this.state.resultSearchQuery.toLowerCase();
+      results = results.filter(r => 
+        (r.programme_name && r.programme_name.toLowerCase().includes(q)) ||
+        (r.programme_code && r.programme_code.toLowerCase().includes(q)) ||
+        (r.category_name && r.category_name.toLowerCase().includes(q)) ||
+        (r.stage_name && r.stage_name.toLowerCase().includes(q))
+      );
+    }
+
+    // Client-side sorting
+    if (this.state.resultSortBy === 'oldest') {
+      results.sort((a, b) => new Date(a.published_at) - new Date(b.published_at));
+    } else if (this.state.resultSortBy === 'name') {
+      results.sort((a, b) => (a.programme_name || '').localeCompare(b.programme_name || ''));
+    } else {
+      // latest
+      results.sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
+    }
+
+    let totalCount = results.length;
 
     const hasActiveFilters = this.state.selectedCategoryFilter || this.state.selectedHouseFilter || this.state.selectedTypeFilter || this.state.selectedFormatFilter || this.state.resultSearchQuery;
 
@@ -1305,6 +1338,14 @@ const app = {
   async renderAdminTabContent() {
     const container = document.getElementById('adminTabContent');
     if (!container) return;
+
+    container.innerHTML = `
+      <div class="flex flex-col items-center justify-center p-12 opacity-50">
+        <i data-lucide="loader-2" class="w-8 h-8 text-indigo-400 animate-spin mb-3"></i>
+        <span class="text-xs font-bold text-slate-400">Loading data...</span>
+      </div>
+    `;
+    lucide.createIcons();
 
     if (this.state.activeAdminTab === 'students') {
       await this.renderAdminStudents(container);
