@@ -1,6 +1,7 @@
 /**
- * DarFest 2026 - Main Frontend Controller
- * Features: Dark/Light Mode, Kid-Friendly Touch UI, Mobile Bottom Navigation, Live Scores & Poster Generator
+ * DarFest 2026 - Main Frontend Controller (English Only)
+ * Features: Dark/Light Mode, Overall Marks Tally, Main & Category Champions Showcase,
+ * Results Page Introduction, Advanced Result Search & Filters, and Shareable Poster Generator.
  */
 
 const API_BASE = '/api';
@@ -19,15 +20,20 @@ const app = {
     activeAdminTab: 'dashboard',
     selectedResultForPoster: null,
     searchStudentQuery: '',
+    
+    // Result Filter States
     selectedCategoryFilter: '',
     selectedHouseFilter: '',
     selectedTypeFilter: '',
+    selectedFormatFilter: '',
     resultSearchQuery: '',
+    resultSortBy: 'latest',
+    
     scheduleStageFilter: 'all',
   },
 
   async init() {
-    console.log('Initializing DarFest 2026 Portal...');
+    console.log('Initializing DarFest 2026 English Portal...');
     this.applyTheme(this.state.theme);
     await this.fetchInitialData();
     this.setupRouting();
@@ -35,7 +41,7 @@ const app = {
     lucide.createIcons();
   },
 
-  // ---------------- THEME SWITCHER (DARK / LIGHT) ----------------
+  // ---------------- THEME TOGGLE ----------------
   toggleTheme() {
     const nextTheme = this.state.theme === 'dark' ? 'light' : 'dark';
     this.state.theme = nextTheme;
@@ -92,7 +98,7 @@ const app = {
     const festName = settings.fest_name || 'DARFEST 2026';
     const festTagline = settings.fest_tagline || 'Annual Arts & Cultural Festival';
 
-    document.title = `${festName} — Live Results & Leaderboard`;
+    document.title = `${festName} — Live Results & Overall Standings`;
     const navName = document.getElementById('navFestName');
     const navTagline = document.getElementById('navFestTagline');
     const footerName = document.getElementById('footerFestName');
@@ -112,35 +118,27 @@ const app = {
     const main = document.getElementById('appMain');
     if (!main) return;
 
-    // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // Update active nav links (Desktop & Mobile Bottom Bar)
     document.querySelectorAll('.nav-link, .mobile-nav-btn').forEach(link => {
       link.classList.remove('text-indigo-400', 'text-amber-400', 'text-yellow-400', 'text-emerald-400', 'text-sky-400', 'font-black');
     });
 
-    let activePage = 'home';
     if (hash.startsWith('#/admin')) {
       this.renderAdminView();
     } else if (hash.startsWith('#/results')) {
-      activePage = 'results';
       this.highlightNav('results', 'text-amber-400');
       this.renderResultsView();
     } else if (hash.startsWith('#/leaderboard')) {
-      activePage = 'leaderboard';
       this.highlightNav('leaderboard', 'text-yellow-400');
       this.renderLeaderboardView();
     } else if (hash.startsWith('#/schedule')) {
-      activePage = 'schedule';
       this.highlightNav('schedule', 'text-emerald-400');
       this.renderScheduleView();
     } else if (hash.startsWith('#/students')) {
-      activePage = 'students';
       this.highlightNav('students', 'text-sky-400');
       this.renderStudentsView();
     } else {
-      activePage = 'home';
       this.highlightNav('home', 'text-indigo-400');
       this.renderHomeView();
     }
@@ -159,7 +157,7 @@ const app = {
     await this.fetchInitialData();
     this.renderTicker();
     this.handleRoute();
-    this.showToast('Updated with latest results & scores!', 'success');
+    this.showToast('Updated to latest results & points tally!', 'success');
   },
 
   renderTicker() {
@@ -225,13 +223,16 @@ const app = {
   },
 
   // ==========================================
-  // 1. PUBLIC HOME VIEW (Kid-Friendly & Mobile-First)
+  // 1. PUBLIC HOME VIEW (English Only with Champions, Overall Marks & Results Intro)
   // ==========================================
   async renderHomeView() {
     const main = document.getElementById('appMain');
     const settings = this.state.festInfo?.settings || {};
     const stats = this.state.festInfo?.stats || {};
     const houses = this.state.houses || [];
+    const categoryChampions = this.state.festInfo?.category_champions || [];
+    const individualChampions = this.state.festInfo?.individual_champions || [];
+    const topHouse = stats.top_house;
 
     let recentResults = [];
     try {
@@ -240,123 +241,256 @@ const app = {
     } catch (e) {}
 
     main.innerHTML = `
-      <!-- Kid-Friendly Hero Section -->
-      <section class="relative rounded-3xl overflow-hidden glass-panel p-5 sm:p-8 mb-8 border shadow-xl bg-gradient-to-br from-indigo-950/40 via-slate-900/60 to-purple-950/40">
-        <div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
-          <div class="space-y-3 text-center lg:text-left">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold">
+      <!-- 1. Hero Banner Section -->
+      <section class="relative rounded-3xl overflow-hidden glass-panel p-6 sm:p-10 mb-8 border shadow-2xl bg-gradient-to-br from-indigo-950/40 via-slate-900/60 to-purple-950/40">
+        <div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
+          <div class="space-y-4 text-center lg:text-left">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold tracking-wide">
               <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-live"></span>
-              <span>${settings.fest_date || 'August 25 - 28, 2026'} • LIVE DESK</span>
+              <span>${settings.fest_date || 'August 25 - 28, 2026'} • LIVE RESULTS DESK</span>
             </div>
-            <h1 class="font-display font-black text-3xl sm:text-5xl tracking-tight text-white">
+            
+            <h1 class="font-display font-black text-3xl sm:text-5xl lg:text-6xl tracking-tight text-white">
               ${this.escapeHtml(settings.fest_name || 'DARFEST 2026')}
             </h1>
-            <p class="text-slate-300 text-xs sm:text-base max-w-lg font-medium">
-              ${this.escapeHtml(settings.fest_tagline || 'Experience the vibrant celebration of art, talent, and culture.')}
+            
+            <p class="text-slate-300 text-xs sm:text-base max-w-xl font-medium leading-relaxed">
+              ${this.escapeHtml(settings.fest_tagline || 'Experience the vibrant celebration of art, talent, music, and culture with real-time scoreboards.')}
             </p>
 
-            <!-- Big Kid-Friendly Quick Action Buttons -->
-            <div class="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 pt-2">
-              <a href="#/results" class="px-5 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-amber-500/30 transition flex items-center gap-2 tap-target">
-                <i data-lucide="trophy" class="w-4 h-4"></i> റിസൾട്ടുകൾ (Results)
+            <!-- Quick Action Buttons -->
+            <div class="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
+              <a href="#/results" class="px-5 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm shadow-xl shadow-amber-500/30 transition flex items-center gap-2">
+                <i data-lucide="trophy" class="w-4 h-4"></i> Browse Published Results
               </a>
-              <a href="#/leaderboard" class="px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-indigo-600/30 transition flex items-center gap-2 tap-target">
-                <i data-lucide="crown" class="w-4 h-4 text-yellow-300"></i> പോയിന്റ് നില (Points)
+              <a href="#/leaderboard" class="px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs sm:text-sm shadow-xl shadow-indigo-600/30 transition flex items-center gap-2">
+                <i data-lucide="crown" class="w-4 h-4 text-yellow-300"></i> Overall Standings
               </a>
-              <a href="#/students" class="px-5 py-3 rounded-2xl glass-card text-white font-bold text-xs sm:text-sm hover:bg-slate-800 transition flex items-center gap-2 tap-target">
-                <i data-lucide="search" class="w-4 h-4 text-sky-400"></i> ചെസ്റ്റ് നമ്പർ തിരയുക
+              <a href="#/students" class="px-5 py-3 rounded-2xl glass-card text-white font-bold text-xs sm:text-sm hover:bg-slate-800 transition flex items-center gap-2 border">
+                <i data-lucide="search" class="w-4 h-4 text-sky-400"></i> Participant Lookup
               </a>
             </div>
           </div>
 
-          <!-- Quick Metrics Cards -->
+          <!-- Festival Counter Metrics -->
           <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-3 w-full lg:w-auto shrink-0">
-            <div class="glass-card p-3 sm:p-4 rounded-2xl text-center border">
+            <div class="glass-card p-4 rounded-2xl text-center border">
               <div class="font-display font-black text-2xl sm:text-3xl text-amber-400">${stats.results_declared || 0}</div>
-              <div class="text-[10px] sm:text-xs text-slate-400 font-bold uppercase">Results Out</div>
+              <div class="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider">Results Out</div>
             </div>
-            <div class="glass-card p-3 sm:p-4 rounded-2xl text-center border">
+            <div class="glass-card p-4 rounded-2xl text-center border">
               <div class="font-display font-black text-2xl sm:text-3xl text-indigo-400">${stats.total_programmes || 0}</div>
-              <div class="text-[10px] sm:text-xs text-slate-400 font-bold uppercase">Total Events</div>
+              <div class="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider">Total Events</div>
             </div>
-            <div class="glass-card p-3 sm:p-4 rounded-2xl text-center border">
+            <div class="glass-card p-4 rounded-2xl text-center border">
               <div class="font-display font-black text-2xl sm:text-3xl text-emerald-400">${stats.total_students || 0}</div>
-              <div class="text-[10px] sm:text-xs text-slate-400 font-bold uppercase">Students</div>
+              <div class="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider">Participants</div>
             </div>
-            <div class="glass-card p-3 sm:p-4 rounded-2xl text-center border">
-              <div class="font-display font-black text-base sm:text-lg text-rose-400 truncate">${stats.top_house ? this.escapeHtml(stats.top_house.name) : 'TBD'}</div>
-              <div class="text-[10px] sm:text-xs text-slate-400 font-bold uppercase">Leader House</div>
+            <div class="glass-card p-4 rounded-2xl text-center border">
+              <div class="font-display font-black text-base sm:text-lg text-rose-400 truncate">${topHouse ? this.escapeHtml(topHouse.name) : 'TBD'}</div>
+              <div class="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider">Top House</div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Instant Chest Number Search Box for Kids -->
-      <section class="mb-8">
-        <div class="glass-panel p-4 sm:p-6 rounded-3xl border text-center space-y-3 bg-gradient-to-r from-sky-950/20 via-slate-900 to-indigo-950/20 shadow-lg">
-          <div class="flex items-center justify-center gap-2 text-sky-400 font-black text-sm uppercase tracking-wider">
-            <i data-lucide="sparkles" class="w-4 h-4"></i> എളുപ്പത്തിൽ റിസൾട്ട് കണ്ടെത്താം (Fast Result Finder)
+      <!-- 2. Main Fest Champion & Category Champions Showcase -->
+      <section class="mb-10 space-y-5">
+        <div>
+          <h2 class="font-display font-black text-xl sm:text-2xl text-white flex items-center gap-2">
+            <i data-lucide="crown" class="w-6 h-6 text-amber-400"></i> Festival Champions & Titles
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-400">Leading championship house and category toppers</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          
+          <!-- Overall Main Champion House Card -->
+          <div class="lg:col-span-1 glass-panel rounded-3xl p-6 border-2 border-amber-500/60 relative overflow-hidden shadow-2xl bg-gradient-to-br from-amber-950/40 via-slate-900 to-slate-900 flex flex-col justify-between">
+            <div class="absolute -right-8 -top-8 w-32 h-32 bg-amber-500/15 rounded-full blur-2xl"></div>
+            
+            <div class="space-y-2 relative z-10">
+              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-black uppercase">
+                <i data-lucide="crown" class="w-3.5 h-3.5"></i> Overall Fest Champion
+              </div>
+              <h3 class="font-display font-black text-2xl sm:text-3xl text-white">
+                ${topHouse ? this.escapeHtml(topHouse.name) : 'Contest in Progress'}
+              </h3>
+              <p class="text-xs text-slate-300">Currently holding 1st place in overall points tally.</p>
+            </div>
+
+            <div class="pt-6 relative z-10">
+              <div class="flex items-baseline gap-2 mb-2">
+                <span class="font-display font-black text-4xl text-amber-400">${topHouse ? topHouse.points : 0}</span>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Marks</span>
+              </div>
+              <div class="text-xs text-amber-300 font-mono font-bold">
+                🥇 ${houses[0]?.gold_count || 0} Gold • 🥈 ${houses[0]?.silver_count || 0} Silver • 🥉 ${houses[0]?.bronze_count || 0} Bronze
+              </div>
+            </div>
           </div>
-          <form onsubmit="app.handleHomeSearch(event)" class="flex gap-2 max-w-lg mx-auto">
-            <input 
-              id="homeChestSearch" 
-              type="text" 
-              placeholder="ചെസ്റ്റ് നമ്പർ ടൈപ്പ് ചെയ്യുക (e.g. 101, 103)..." 
-              class="flex-1 px-4 py-3 rounded-2xl glass-input text-xs sm:text-sm font-bold"
-            >
-            <button type="submit" class="px-5 py-3 bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs sm:text-sm rounded-2xl shadow-lg transition flex items-center gap-1.5 shrink-0">
-              <i data-lucide="search" class="w-4 h-4"></i> തിരയുക
-            </button>
-          </form>
+
+          <!-- Category Champions (Sub-Junior, Junior, Senior, General) -->
+          <div class="lg:col-span-2 glass-panel rounded-3xl p-6 border space-y-4 shadow-xl">
+            <div class="flex items-center justify-between border-b pb-3">
+              <h3 class="font-display font-bold text-base text-white flex items-center gap-2">
+                <i data-lucide="award" class="w-4 h-4 text-indigo-400"></i> Category Champions
+              </h3>
+              <span class="text-xs text-slate-400 font-medium">Leading House per Category</span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              ${categoryChampions.length > 0 ? categoryChampions.map(c => `
+                <div class="p-3.5 rounded-2xl bg-slate-900/60 border text-center space-y-1 hover:scale-105 transition duration-200">
+                  <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">${c.category_name}</span>
+                  <div class="font-display font-black text-sm text-white truncate">${this.escapeHtml(c.house_name)}</div>
+                  <div class="text-xs font-black text-amber-400 font-mono">+${c.points} pts</div>
+                </div>
+              `).join('') : `
+                <div class="col-span-4 text-center text-slate-500 text-xs py-4">Category champions will be finalized as results are declared.</div>
+              `}
+            </div>
+
+            <!-- Top Individual Performers -->
+            <div class="pt-3 border-t">
+              <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i> Top Star Performers (Highest Individual Points)
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                ${individualChampions.map((s, idx) => `
+                  <div class="p-2.5 rounded-xl bg-slate-900/40 border flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-2">
+                      <span class="w-5 h-5 rounded-full ${idx === 0 ? 'medal-gold' : idx === 1 ? 'medal-silver' : 'medal-bronze'} flex items-center justify-center font-bold text-[10px]">
+                        ${idx + 1}
+                      </span>
+                      <div>
+                        <div class="font-bold text-white">${this.escapeHtml(s.name)}</div>
+                        <div class="text-[10px] text-slate-400">#${s.chest_no} • ${s.house_name}</div>
+                      </div>
+                    </div>
+                    <div class="font-mono font-bold text-amber-400">${s.total_points} pts</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+          </div>
+
         </div>
       </section>
 
-      <!-- House Championship Cards -->
-      <section class="mb-10">
-        <div class="flex items-center justify-between mb-4">
+      <!-- 3. Overall Marks & House Scoreboard Section -->
+      <section class="mb-10 space-y-4">
+        <div class="flex items-center justify-between">
           <div>
-            <h2 class="font-display font-black text-lg sm:text-2xl text-white flex items-center gap-2">
-              <i data-lucide="crown" class="w-6 h-6 text-amber-400"></i> ഹൗസ് പോയിന്റ് നില (House Standings)
+            <h2 class="font-display font-black text-xl sm:text-2xl text-white flex items-center gap-2">
+              <i data-lucide="bar-chart-2" class="w-6 h-6 text-indigo-400"></i> Overall Points Tally (House Scoreboard)
             </h2>
-            <p class="text-xs text-slate-400">തത്സമയ പോയിന്റ് പട്ടിക</p>
+            <p class="text-xs sm:text-sm text-slate-400">Real-time aggregate marks scored across all competitive events</p>
           </div>
-          <a href="#/leaderboard" class="text-xs font-bold text-indigo-400 hover:text-indigo-300">മുഴുവൻ കാണുക →</a>
+          <a href="#/leaderboard" class="text-xs font-bold text-indigo-400 hover:text-indigo-300">Detailed Breakdown →</a>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          ${houses.map((h, idx) => {
-            const ranks = ['🥇 1st', '🥈 2nd', '🥉 3rd', '4th'];
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          ${houses.map((h, index) => {
+            const ranks = ['🥇 1st Place', '🥈 2nd Place', '🥉 3rd Place', '4th Place'];
+            const isLeader = index === 0;
+
             return `
-              <div class="glass-panel rounded-2xl p-4 border relative overflow-hidden group hover:-translate-y-1 transition duration-200">
+              <div class="glass-panel rounded-3xl p-5 border ${isLeader ? 'border-amber-500/60 shadow-xl shadow-amber-500/10' : ''} relative overflow-hidden group hover:-translate-y-1 transition duration-200">
                 <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${h.bg_gradient}"></div>
-                <div class="flex items-center justify-between mb-2">
-                  <span class="px-2 py-0.5 rounded-full text-[11px] font-black ${idx === 0 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-slate-800 text-slate-300'}">
-                    ${ranks[idx] || `#${idx + 1}`}
+                
+                <div class="flex items-center justify-between mb-3">
+                  <span class="px-2.5 py-0.5 rounded-full text-xs font-black ${isLeader ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-slate-800 text-slate-300'}">
+                    ${ranks[index] || `#${index + 1}`}
                   </span>
-                  <div class="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs shadow" style="background-color: ${h.color}">
+                  <div class="w-7 h-7 rounded-full flex items-center justify-center text-white font-black text-xs shadow" style="background-color: ${h.color}">
                     ${h.code.slice(0, 2)}
                   </div>
                 </div>
-                <h3 class="font-display font-bold text-sm sm:text-base text-white truncate">${this.escapeHtml(h.name)}</h3>
-                <div class="font-display font-black text-2xl sm:text-3xl text-white my-1">${h.points} <span class="text-xs font-normal text-slate-400">pts</span></div>
-                <div class="text-[11px] text-slate-400 font-mono pt-1 border-t">${h.gold_count || 0}🥇 • ${h.silver_count || 0}🥈 • ${h.bronze_count || 0}🥉</div>
+
+                <h3 class="font-display font-black text-lg text-white mb-1">${this.escapeHtml(h.name)}</h3>
+                
+                <div class="flex items-baseline gap-2 my-2">
+                  <span class="font-display font-black text-3xl sm:text-4xl text-white tracking-tight">${h.points}</span>
+                  <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Marks</span>
+                </div>
+
+                <div class="grid grid-cols-3 gap-1.5 pt-3 border-t text-center text-xs">
+                  <div class="bg-slate-900/50 py-1.5 rounded-xl">
+                    <div class="font-bold text-amber-400">${h.gold_count || 0}</div>
+                    <div class="text-[10px] text-slate-500">Gold</div>
+                  </div>
+                  <div class="bg-slate-900/50 py-1.5 rounded-xl">
+                    <div class="font-bold text-slate-300">${h.silver_count || 0}</div>
+                    <div class="text-[10px] text-slate-500">Silver</div>
+                  </div>
+                  <div class="bg-slate-900/50 py-1.5 rounded-xl">
+                    <div class="font-bold text-amber-600">${h.bronze_count || 0}</div>
+                    <div class="text-[10px] text-slate-500">Bronze</div>
+                  </div>
+                </div>
               </div>
             `;
           }).join('')}
         </div>
       </section>
 
-      <!-- Recent Results -->
-      <section class="space-y-4">
-        <div class="flex items-center justify-between">
-          <h2 class="font-display font-black text-lg sm:text-xl text-white flex items-center gap-2">
-            <i data-lucide="sparkles" class="w-5 h-5 text-amber-400"></i> പ്രഖ്യാപിച്ച റിസൾട്ടുകൾ (Recent Results)
-          </h2>
-          <a href="#/results" class="text-xs font-bold text-indigo-400 hover:text-indigo-300">View All</a>
-        </div>
+      <!-- 4. Introduction to Results Page (Dedicated Results Hub Teaser) -->
+      <section class="mb-10">
+        <div class="glass-panel p-6 sm:p-8 rounded-3xl border border-indigo-500/30 bg-gradient-to-r from-indigo-950/40 via-slate-900 to-purple-950/40 shadow-2xl space-y-6">
+          
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4">
+            <div class="space-y-1">
+              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold uppercase tracking-wider">
+                <i data-lucide="trophy" class="w-3.5 h-3.5 text-amber-400"></i> Official Result Publishing Portal
+              </div>
+              <h2 class="font-display font-black text-2xl sm:text-3xl text-white">
+                Live Declared Results & Winner Certificates
+              </h2>
+              <p class="text-xs sm:text-sm text-slate-300 max-w-2xl">
+                Every declared festival result is verified and updated in real-time with 1st, 2nd, and 3rd place winners, grades (A, B, C), awarded house points, and downloadable high-resolution social posters.
+              </p>
+            </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          ${recentResults.map(r => this.renderResultCardHtml(r)).join('')}
+            <a href="#/results" class="px-6 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs sm:text-sm rounded-2xl shadow-xl shadow-indigo-600/30 transition flex items-center gap-2 shrink-0">
+              <span>View All Results</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </a>
+          </div>
+
+          <!-- Recent Declared Results Stream -->
+          <div>
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Recently Declared Events:</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              ${recentResults.map(r => this.renderResultCardHtml(r)).join('')}
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 5. Fast Chest Number Search Card -->
+      <section>
+        <div class="glass-panel p-6 sm:p-8 rounded-3xl border text-center space-y-4 shadow-xl">
+          <div class="w-12 h-12 rounded-2xl bg-sky-500/20 text-sky-400 mx-auto flex items-center justify-center">
+            <i data-lucide="search" class="w-6 h-6"></i>
+          </div>
+          <h2 class="font-display font-black text-2xl text-white">Instant Participant Finder</h2>
+          <p class="text-xs sm:text-sm text-slate-400 max-w-md mx-auto">
+            Type any student's <strong>Chest Number</strong> or Name to view their registered items and medals won.
+          </p>
+
+          <form onsubmit="app.handleHomeSearch(event)" class="flex gap-2 max-w-md mx-auto">
+            <input 
+              id="homeChestSearch" 
+              type="text" 
+              placeholder="Enter Chest No (e.g. 101, 103)..." 
+              class="flex-1 px-4 py-3 rounded-2xl glass-input text-xs sm:text-sm font-bold"
+            >
+            <button type="submit" class="px-6 py-3 bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs sm:text-sm rounded-2xl shadow-lg transition flex items-center gap-1.5 shrink-0">
+              <i data-lucide="search" class="w-4 h-4"></i> Search
+            </button>
+          </form>
         </div>
       </section>
     `;
@@ -372,83 +506,136 @@ const app = {
   },
 
   // ==========================================
-  // 2. PUBLIC RESULTS VIEW
+  // 2. PUBLIC RESULTS VIEW (Advanced Search & Filters)
   // ==========================================
   async renderResultsView() {
     const main = document.getElementById('appMain');
     let results = [];
+    let totalCount = 0;
+
     try {
       let queryParams = new URLSearchParams();
       if (this.state.selectedCategoryFilter) queryParams.set('category_id', this.state.selectedCategoryFilter);
       if (this.state.selectedHouseFilter) queryParams.set('house_id', this.state.selectedHouseFilter);
+      if (this.state.selectedTypeFilter) queryParams.set('type', this.state.selectedTypeFilter);
+      if (this.state.selectedFormatFilter) queryParams.set('format', this.state.selectedFormatFilter);
       if (this.state.resultSearchQuery) queryParams.set('search', this.state.resultSearchQuery);
+      if (this.state.resultSortBy) queryParams.set('sort', this.state.resultSortBy);
 
       const res = await fetch(`${API_BASE}/results?${queryParams.toString()}`).then(r => r.json());
-      if (res.success) results = res.results;
-    } catch (e) {}
+      if (res.success) {
+        results = res.results;
+        totalCount = res.total_count || results.length;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    const hasActiveFilters = this.state.selectedCategoryFilter || this.state.selectedHouseFilter || this.state.selectedTypeFilter || this.state.selectedFormatFilter || this.state.resultSearchQuery;
 
     main.innerHTML = `
       <div class="space-y-6">
         
-        <!-- Header -->
-        <div class="glass-panel p-5 sm:p-6 rounded-3xl border flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <!-- Header & Universal Search Bar -->
+        <div class="glass-panel p-6 sm:p-8 rounded-3xl border flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl">
           <div>
-            <h1 class="font-display font-black text-2xl sm:text-3xl text-white flex items-center gap-2.5">
-              <i data-lucide="trophy" class="w-7 h-7 text-amber-400"></i> മത്സര ഫലങ്ങൾ (Declared Results)
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold uppercase tracking-wider mb-1">
+              <i data-lucide="trophy" class="w-3.5 h-3.5"></i> Results Desk
+            </div>
+            <h1 class="font-display font-black text-2xl sm:text-3xl text-white">
+              Official Declared Results
             </h1>
-            <p class="text-xs sm:text-sm text-slate-400">വിജയികളുടെ വിവരങ്ങളും പോസ്റ്ററുകളും കാണാം</p>
+            <p class="text-xs sm:text-sm text-slate-400">Search events by code, name, or student chest number</p>
           </div>
 
-          <!-- Big Search -->
+          <!-- Universal Search Input -->
           <div class="relative w-full md:w-80">
             <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
             <input 
               type="text" 
-              placeholder="ഇനം / കോഡ് തിരയുക (Search event)..." 
+              placeholder="Search event, student, chest #..." 
               value="${this.escapeHtml(this.state.resultSearchQuery)}"
               oninput="app.handleResultSearch(this.value)"
-              class="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm rounded-2xl glass-input font-bold"
+              class="w-full pl-10 pr-4 py-3 text-xs sm:text-sm rounded-2xl glass-input font-bold"
             >
           </div>
         </div>
 
-        <!-- Category & House Filter Pills -->
-        <div class="space-y-3">
+        <!-- Comprehensive Filter & Sorting Toolbar -->
+        <div class="glass-panel p-5 rounded-3xl border space-y-4 shadow-lg">
+          
+          <!-- Category Filter Pills -->
           <div class="flex flex-wrap items-center gap-2 text-xs">
-            <span class="text-slate-400 font-bold uppercase tracking-wider text-[11px] mr-1">വിഭാഗം:</span>
-            <button onclick="app.setCategoryFilter('')" class="px-3.5 py-2 rounded-xl font-bold transition tap-target ${!this.state.selectedCategoryFilter ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'glass-card text-slate-300'}">
-              All
+            <span class="text-slate-400 font-bold uppercase tracking-wider text-[11px] mr-1">Category:</span>
+            <button onclick="app.setCategoryFilter('')" class="px-3.5 py-2 rounded-xl font-bold transition ${!this.state.selectedCategoryFilter ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'glass-card text-slate-300'}">
+              All Categories
             </button>
             ${this.state.categories.map(c => `
-              <button onclick="app.setCategoryFilter('${c.id}')" class="px-3.5 py-2 rounded-xl font-bold transition tap-target ${this.state.selectedCategoryFilter == c.id ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'glass-card text-slate-300'}">
+              <button onclick="app.setCategoryFilter('${c.id}')" class="px-3.5 py-2 rounded-xl font-bold transition ${this.state.selectedCategoryFilter == c.id ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' : 'glass-card text-slate-300'}">
                 ${c.name}
               </button>
             `).join('')}
           </div>
 
-          <div class="flex flex-wrap items-center gap-2 text-xs">
-            <span class="text-slate-400 font-bold uppercase tracking-wider text-[11px] mr-1">ഹൗസ്:</span>
-            <button onclick="app.setHouseFilter('')" class="px-3 py-1.5 rounded-xl font-bold transition ${!this.state.selectedHouseFilter ? 'bg-indigo-600 text-white' : 'glass-card text-slate-300'}">
-              All Houses
-            </button>
-            ${this.state.houses.map(h => `
-              <button onclick="app.setHouseFilter('${h.id}')" class="px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 ${this.state.selectedHouseFilter == h.id ? 'bg-indigo-600 text-white' : 'glass-card text-slate-300'}">
-                <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${h.color}"></span>
-                ${h.name}
+          <!-- House, Type, Format & Sort Controls -->
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t text-xs">
+            
+            <!-- House Filters -->
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="text-slate-400 font-bold uppercase tracking-wider text-[11px] mr-1">House:</span>
+              <button onclick="app.setHouseFilter('')" class="px-3 py-1.5 rounded-xl font-bold transition ${!this.state.selectedHouseFilter ? 'bg-indigo-600 text-white' : 'glass-card text-slate-300'}">
+                All
               </button>
-            `).join('')}
+              ${this.state.houses.map(h => `
+                <button onclick="app.setHouseFilter('${h.id}')" class="px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 ${this.state.selectedHouseFilter == h.id ? 'bg-indigo-600 text-white' : 'glass-card text-slate-300'}">
+                  <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${h.color}"></span>
+                  <span>${h.name}</span>
+                </button>
+              `).join('')}
+            </div>
+
+            <!-- Stage Type & Sort Selector -->
+            <div class="flex items-center gap-2">
+              <select onchange="app.setTypeFilter(this.value)" class="px-3 py-1.5 rounded-xl glass-input text-xs font-bold bg-slate-900">
+                <option value="" ${!this.state.selectedTypeFilter ? 'selected' : ''}>All Types</option>
+                <option value="On-Stage" ${this.state.selectedTypeFilter === 'On-Stage' ? 'selected' : ''}>On-Stage</option>
+                <option value="Off-Stage" ${this.state.selectedTypeFilter === 'Off-Stage' ? 'selected' : ''}>Off-Stage</option>
+              </select>
+
+              <select onchange="app.setSortBy(this.value)" class="px-3 py-1.5 rounded-xl glass-input text-xs font-bold bg-slate-900">
+                <option value="latest" ${this.state.resultSortBy === 'latest' ? 'selected' : ''}>Newest First</option>
+                <option value="code" ${this.state.resultSortBy === 'code' ? 'selected' : ''}>Event Code</option>
+              </select>
+
+              ${hasActiveFilters ? `
+                <button onclick="app.resetResultFilters()" class="px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-bold transition flex items-center gap-1">
+                  <i data-lucide="x-circle" class="w-3.5 h-3.5"></i> Clear
+                </button>
+              ` : ''}
+            </div>
+
           </div>
+
+        </div>
+
+        <!-- Result Counter Status -->
+        <div class="flex items-center justify-between text-xs text-slate-400 px-1 font-semibold">
+          <span>Showing <strong>${results.length}</strong> published results</span>
+          ${hasActiveFilters ? `<span class="text-amber-400">Filters active</span>` : ''}
         </div>
 
         <!-- Results Grid -->
         ${results.length === 0 ? `
-          <div class="glass-panel p-12 rounded-3xl text-center space-y-2 border">
-            <i data-lucide="inbox" class="w-10 h-10 mx-auto text-slate-500"></i>
-            <h3 class="font-bold text-base text-white">ഫലങ്ങൾ ലഭ്യമല്ല (No Results Found)</h3>
-            <p class="text-xs text-slate-400">മറ്റൊരു ഇനത്തിന്റെ പേരോ കോഡോ തിരയുക</p>
+          <div class="glass-panel p-16 rounded-3xl text-center space-y-3 border shadow-xl">
+            <i data-lucide="inbox" class="w-12 h-12 mx-auto text-slate-500"></i>
+            <h3 class="font-bold text-lg text-white">No Results Match Your Query</h3>
+            <p class="text-xs text-slate-400 max-w-sm mx-auto">Try clearing selected filters or searching with a different keyword.</p>
+            <button onclick="app.resetResultFilters()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow transition">
+              Reset Filters
+            </button>
           </div>
         ` : `
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             ${results.map(r => this.renderResultCardHtml(r)).join('')}
           </div>
         `}
@@ -469,6 +656,29 @@ const app = {
     lucide.createIcons();
   },
 
+  setTypeFilter(val) {
+    this.state.selectedTypeFilter = val;
+    this.renderResultsView();
+    lucide.createIcons();
+  },
+
+  setSortBy(val) {
+    this.state.resultSortBy = val;
+    this.renderResultsView();
+    lucide.createIcons();
+  },
+
+  resetResultFilters() {
+    this.state.selectedCategoryFilter = '';
+    this.state.selectedHouseFilter = '';
+    this.state.selectedTypeFilter = '';
+    this.state.selectedFormatFilter = '';
+    this.state.resultSearchQuery = '';
+    this.state.resultSortBy = 'latest';
+    this.renderResultsView();
+    lucide.createIcons();
+  },
+
   handleResultSearch(val) {
     this.state.resultSearchQuery = val;
     this.debounce(() => {
@@ -484,47 +694,49 @@ const app = {
     const third = winners.find(w => w.position === 3);
 
     return `
-      <div class="glass-panel rounded-3xl p-5 border space-y-4 shadow-lg hover:border-indigo-500/40 transition duration-200">
+      <div class="glass-panel rounded-3xl p-5 sm:p-6 border space-y-4 shadow-xl hover:border-indigo-500/40 transition duration-200">
         
-        <!-- Top Event Details -->
-        <div class="flex items-start justify-between gap-2">
+        <!-- Header -->
+        <div class="flex items-start justify-between gap-3">
           <div>
-            <div class="flex items-center gap-1.5 mb-1 text-xs">
-              <span class="px-2 py-0.5 rounded-lg bg-indigo-500/20 text-indigo-300 font-mono font-bold">
+            <div class="flex items-center gap-2 mb-1.5 text-xs">
+              <span class="px-2.5 py-0.5 rounded-lg bg-indigo-500/20 text-indigo-300 font-mono font-bold">
                 ${this.escapeHtml(r.programme_code)}
               </span>
               <span class="text-slate-400 font-semibold">• ${r.category_name}</span>
+              <span class="text-slate-400 font-semibold">• ${r.programme_type}</span>
             </div>
-            <h3 class="font-display font-black text-lg text-white leading-tight">${this.escapeHtml(r.programme_name)}</h3>
-            <div class="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
-              <i data-lucide="map-pin" class="w-3 h-3 text-emerald-400"></i> ${r.stage_name || 'Main Stage'}
+            <h3 class="font-display font-black text-lg sm:text-xl text-white leading-tight">${this.escapeHtml(r.programme_name)}</h3>
+            <div class="text-[11px] text-slate-400 flex items-center gap-1.5 mt-1">
+              <i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-400"></i>
+              <span>${r.stage_name || 'Main Stage'}</span>
             </div>
           </div>
 
           <!-- Share / Poster Button -->
-          <button onclick="app.openPosterModal('${r.result_id}')" class="px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-black text-xs transition border border-amber-500/30 flex items-center gap-1.5 shrink-0" title="Generate Shareable Poster">
+          <button onclick="app.openPosterModal('${r.result_id}')" class="px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-bold text-xs transition border border-amber-500/30 flex items-center gap-1.5 shrink-0" title="Generate Shareable Result Poster">
             <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
-            <span>പോസ്റ്റർ</span>
+            <span>Poster</span>
           </button>
         </div>
 
         <!-- Winners Tier List -->
-        <div class="space-y-2 pt-1 border-t">
+        <div class="space-y-2.5 pt-2 border-t">
           
           <!-- 1st Place (Gold) -->
           ${first ? `
-            <div class="flex items-center justify-between p-2.5 sm:p-3 rounded-2xl bg-amber-500/15 border border-amber-500/40">
-              <div class="flex items-center gap-2.5">
+            <div class="flex items-center justify-between p-3 rounded-2xl bg-amber-500/15 border border-amber-500/40">
+              <div class="flex items-center gap-3">
                 <span class="w-8 h-8 rounded-full medal-gold flex items-center justify-center font-black text-sm shrink-0 shadow">
                   1
                 </span>
                 <div>
-                  <div class="font-black text-xs sm:text-sm text-white flex items-center gap-1.5">
+                  <div class="font-black text-sm text-white flex items-center gap-2">
                     ${this.escapeHtml(first.student_name)}
                     <span class="text-xs font-mono font-bold text-amber-300">#${first.chest_no}</span>
                   </div>
-                  <div class="text-[11px] text-slate-300 flex items-center gap-1">
-                    <span class="w-2 h-2 rounded-full" style="background-color: ${first.house_color || '#ef4444'}"></span>
+                  <div class="text-xs text-slate-300 flex items-center gap-1.5 mt-0.5">
+                    <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${first.house_color || '#ef4444'}"></span>
                     <span>${first.house_name}</span>
                   </div>
                 </div>
@@ -532,25 +744,25 @@ const app = {
 
               <div class="text-right">
                 <div class="text-xs font-black text-amber-400">+${first.points_awarded} pts</div>
-                ${first.grade && first.grade !== 'None' ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300">Grade ${first.grade}</span>` : ''}
+                ${first.grade && first.grade !== 'None' ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">Grade ${first.grade}</span>` : ''}
               </div>
             </div>
           ` : ''}
 
           <!-- 2nd Place (Silver) -->
           ${second ? `
-            <div class="flex items-center justify-between p-2.5 sm:p-3 rounded-2xl bg-slate-800/40 border border-slate-700/60">
-              <div class="flex items-center gap-2.5">
-                <span class="w-7 h-7 rounded-full medal-silver flex items-center justify-center font-black text-xs shrink-0 shadow">
+            <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-800/40 border border-slate-700/60">
+              <div class="flex items-center gap-3">
+                <span class="w-8 h-8 rounded-full medal-silver flex items-center justify-center font-black text-sm shrink-0 shadow">
                   2
                 </span>
                 <div>
-                  <div class="font-bold text-xs sm:text-sm text-white flex items-center gap-1.5">
+                  <div class="font-bold text-sm text-white flex items-center gap-2">
                     ${this.escapeHtml(second.student_name)}
                     <span class="text-xs font-mono font-semibold text-slate-400">#${second.chest_no}</span>
                   </div>
-                  <div class="text-[11px] text-slate-300 flex items-center gap-1">
-                    <span class="w-2 h-2 rounded-full" style="background-color: ${second.house_color || '#3b82f6'}"></span>
+                  <div class="text-xs text-slate-300 flex items-center gap-1.5 mt-0.5">
+                    <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${second.house_color || '#3b82f6'}"></span>
                     <span>${second.house_name}</span>
                   </div>
                 </div>
@@ -558,25 +770,25 @@ const app = {
 
               <div class="text-right">
                 <div class="text-xs font-bold text-slate-300">+${second.points_awarded} pts</div>
-                ${second.grade && second.grade !== 'None' ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-700 text-slate-300">Grade ${second.grade}</span>` : ''}
+                ${second.grade && second.grade !== 'None' ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-700 text-slate-300">Grade ${second.grade}</span>` : ''}
               </div>
             </div>
           ` : ''}
 
           <!-- 3rd Place (Bronze) -->
           ${third ? `
-            <div class="flex items-center justify-between p-2.5 sm:p-3 rounded-2xl bg-amber-950/20 border border-amber-800/40">
-              <div class="flex items-center gap-2.5">
-                <span class="w-7 h-7 rounded-full medal-bronze flex items-center justify-center font-black text-xs shrink-0 shadow">
+            <div class="flex items-center justify-between p-3 rounded-2xl bg-amber-950/20 border border-amber-800/40">
+              <div class="flex items-center gap-3">
+                <span class="w-8 h-8 rounded-full medal-bronze flex items-center justify-center font-black text-sm shrink-0 shadow">
                   3
                 </span>
                 <div>
-                  <div class="font-bold text-xs sm:text-sm text-white flex items-center gap-1.5">
+                  <div class="font-bold text-sm text-white flex items-center gap-2">
                     ${this.escapeHtml(third.student_name)}
                     <span class="text-xs font-mono font-semibold text-amber-500">#${third.chest_no}</span>
                   </div>
-                  <div class="text-[11px] text-slate-300 flex items-center gap-1">
-                    <span class="w-2 h-2 rounded-full" style="background-color: ${third.house_color || '#10b981'}"></span>
+                  <div class="text-xs text-slate-300 flex items-center gap-1.5 mt-0.5">
+                    <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${third.house_color || '#10b981'}"></span>
                     <span>${third.house_name}</span>
                   </div>
                 </div>
@@ -584,7 +796,7 @@ const app = {
 
               <div class="text-right">
                 <div class="text-xs font-bold text-amber-500">+${third.points_awarded} pts</div>
-                ${third.grade && third.grade !== 'None' ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-300">Grade ${third.grade}</span>` : ''}
+                ${third.grade && third.grade !== 'None' ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-900/40 text-amber-300">Grade ${third.grade}</span>` : ''}
               </div>
             </div>
           ` : ''}
@@ -593,7 +805,7 @@ const app = {
 
         <div class="text-[11px] text-slate-400 pt-1 flex items-center justify-between">
           <span>Official Declared Result</span>
-          <span>${new Date(r.published_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          <span>${new Date(r.published_at).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
         </div>
 
       </div>
@@ -614,14 +826,15 @@ const app = {
     } catch(e) {}
 
     main.innerHTML = `
-      <div class="space-y-6">
+      <div class="space-y-8">
         
-        <div class="text-center max-w-xl mx-auto space-y-2">
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-black uppercase">
+        <!-- Header -->
+        <div class="text-center max-w-2xl mx-auto space-y-2">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-black uppercase tracking-wider">
             <i data-lucide="crown" class="w-4 h-4"></i> Championship Standings
           </div>
-          <h1 class="font-display font-black text-3xl sm:text-4xl text-white">ഹൗസ് പോയിന്റ് പട്ടിക</h1>
-          <p class="text-slate-400 text-xs sm:text-sm">തത്സമയ പോയിന്റുകളും മെഡലുകളും</p>
+          <h1 class="font-display font-black text-3xl sm:text-4xl text-white">House Championship Leaderboard</h1>
+          <p class="text-slate-400 text-xs sm:text-sm">Real-time aggregate marks scored across all competitive events</p>
         </div>
 
         <!-- 3D Olympic Podium (Top 3) -->
@@ -629,28 +842,28 @@ const app = {
           <div class="grid grid-cols-3 gap-2 sm:gap-4 max-w-2xl mx-auto items-end pt-6 pb-4">
             
             <!-- 2nd Place -->
-            <div class="glass-panel p-3 sm:p-4 rounded-3xl border text-center space-y-2 flex flex-col items-center justify-end h-52 sm:h-56 bg-slate-900/60 shadow-lg">
+            <div class="glass-panel p-4 rounded-3xl border text-center space-y-2 flex flex-col items-center justify-end h-52 sm:h-56 bg-slate-900/60 shadow-lg">
               <span class="w-10 h-10 rounded-full medal-silver flex items-center justify-center font-black text-lg shadow">2</span>
               <h3 class="font-display font-bold text-xs sm:text-sm text-white truncate max-w-full">${this.escapeHtml(houses[1].name)}</h3>
-              <div class="font-display font-black text-xl sm:text-3xl text-white">${houses[1].points} <span class="text-[10px] sm:text-xs text-slate-400 font-normal">pts</span></div>
-              <div class="text-[10px] text-slate-400 font-mono">${houses[1].gold_count || 0}🥇 • ${houses[1].silver_count || 0}🥈</div>
+              <div class="font-display font-black text-xl sm:text-3xl text-white">${houses[1].points} <span class="text-xs text-slate-400 font-normal">pts</span></div>
+              <div class="text-[11px] text-slate-400 font-mono">${houses[1].gold_count || 0}🥇 • ${houses[1].silver_count || 0}🥈</div>
             </div>
 
             <!-- 1st Place (Champion) -->
-            <div class="glass-panel p-4 sm:p-5 rounded-3xl border-2 border-amber-500/70 text-center space-y-2 flex flex-col items-center justify-end h-64 sm:h-68 bg-gradient-to-t from-amber-950/40 via-slate-900/90 to-slate-900/40 shadow-2xl shadow-amber-500/20 -translate-y-2">
+            <div class="glass-panel p-5 rounded-3xl border-2 border-amber-500/70 text-center space-y-2 flex flex-col items-center justify-end h-64 sm:h-68 bg-gradient-to-t from-amber-950/40 via-slate-900/90 to-slate-900/40 shadow-2xl shadow-amber-500/20 -translate-y-2">
               <i data-lucide="crown" class="w-8 h-8 text-amber-400 animate-bounce"></i>
               <span class="w-12 h-12 rounded-full medal-gold flex items-center justify-center font-black text-xl shadow">1</span>
               <h3 class="font-display font-black text-sm sm:text-lg text-amber-300 truncate max-w-full">${this.escapeHtml(houses[0].name)}</h3>
               <div class="font-display font-black text-2xl sm:text-4xl text-white">${houses[0].points} <span class="text-xs text-amber-300 font-normal">pts</span></div>
-              <div class="text-xs text-amber-300 font-bold">${houses[0].gold_count || 0} Gold 🥇</div>
+              <div class="text-xs text-amber-300 font-bold">${houses[0].gold_count || 0} Gold Medals 🥇</div>
             </div>
 
             <!-- 3rd Place -->
-            <div class="glass-panel p-3 sm:p-4 rounded-3xl border text-center space-y-2 flex flex-col items-center justify-end h-44 sm:h-48 bg-slate-900/60 shadow-lg">
+            <div class="glass-panel p-4 rounded-3xl border text-center space-y-2 flex flex-col items-center justify-end h-44 sm:h-48 bg-slate-900/60 shadow-lg">
               <span class="w-9 h-9 rounded-full medal-bronze flex items-center justify-center font-black text-base shadow">3</span>
               <h3 class="font-display font-bold text-xs sm:text-sm text-white truncate max-w-full">${this.escapeHtml(houses[2].name)}</h3>
-              <div class="font-display font-black text-lg sm:text-2xl text-white">${houses[2].points} <span class="text-[10px] sm:text-xs text-slate-400 font-normal">pts</span></div>
-              <div class="text-[10px] text-slate-400 font-mono">${houses[2].gold_count || 0}🥇 • ${houses[2].silver_count || 0}🥈</div>
+              <div class="font-display font-black text-lg sm:text-2xl text-white">${houses[2].points} <span class="text-xs text-slate-400 font-normal">pts</span></div>
+              <div class="text-[11px] text-slate-400 font-mono">${houses[2].gold_count || 0}🥇 • ${houses[2].silver_count || 0}🥈</div>
             </div>
 
           </div>
@@ -659,19 +872,20 @@ const app = {
         <!-- Leaderboard Table -->
         <div class="glass-panel rounded-3xl overflow-hidden border shadow-xl">
           <div class="p-4 border-b font-black text-sm text-white flex items-center justify-between">
-            <span>മുഴുവൻ ഹൗസ് സ്കോർകാർഡ് (Score Table)</span>
+            <span>All Houses Scorecard</span>
+            <span class="text-xs text-slate-400 font-normal">Ranked by Total Marks</span>
           </div>
 
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs sm:text-sm">
               <thead class="text-slate-400 uppercase text-xs border-b">
                 <tr>
-                  <th class="py-3 px-4 text-center">Rank</th>
-                  <th class="py-3 px-4">House</th>
-                  <th class="py-3 px-4 text-center">🥇 Gold</th>
-                  <th class="py-3 px-4 text-center">🥈 Silver</th>
-                  <th class="py-3 px-4 text-center">🥉 Bronze</th>
-                  <th class="py-3 px-4 text-right">Total Points</th>
+                  <th class="py-3.5 px-4 text-center">Rank</th>
+                  <th class="py-3.5 px-4">House Name</th>
+                  <th class="py-3.5 px-4 text-center">🥇 Gold (1st)</th>
+                  <th class="py-3.5 px-4 text-center">🥈 Silver (2nd)</th>
+                  <th class="py-3.5 px-4 text-center">🥉 Bronze (3rd)</th>
+                  <th class="py-3.5 px-4 text-right">Total Marks</th>
                 </tr>
               </thead>
               <tbody class="divide-y">
@@ -683,6 +897,7 @@ const app = {
                     <td class="py-4 px-4 font-bold text-white flex items-center gap-2.5">
                       <div class="w-3.5 h-3.5 rounded-full" style="background-color: ${h.color}"></div>
                       <span>${this.escapeHtml(h.name)}</span>
+                      <span class="text-xs text-slate-500 font-mono">(${h.code})</span>
                     </td>
                     <td class="py-4 px-4 text-center font-mono font-bold text-amber-400">${h.gold_count || 0}</td>
                     <td class="py-4 px-4 text-center font-mono font-bold text-slate-300">${h.silver_count || 0}</td>
@@ -720,17 +935,17 @@ const app = {
 
     main.innerHTML = `
       <div class="space-y-6">
-        <div class="glass-panel p-5 sm:p-6 rounded-3xl border flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="glass-panel p-6 sm:p-8 rounded-3xl border flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl">
           <div>
             <h1 class="font-display font-black text-2xl sm:text-3xl text-white flex items-center gap-2.5">
-              <i data-lucide="calendar" class="w-7 h-7 text-emerald-400"></i> പ്രോഗ്രാം ടൈംടേബിൾ (Schedule)
+              <i data-lucide="calendar" class="w-7 h-7 text-emerald-400"></i> Event Timetable & Schedule
             </h1>
-            <p class="text-xs sm:text-sm text-slate-400">സ്റ്റേജ് വിവരങ്ങളും സമയക്രമവും</p>
+            <p class="text-xs sm:text-sm text-slate-400">Stage-by-stage competitive events schedule</p>
           </div>
 
           <div class="flex flex-wrap items-center gap-1.5 text-xs">
             ${stages.map(s => `
-              <button onclick="app.setScheduleStageFilter('${s}')" class="px-3 py-2 rounded-xl font-bold transition tap-target ${this.state.scheduleStageFilter === s ? 'bg-emerald-600 text-white shadow-lg' : 'glass-card text-slate-300'}">
+              <button onclick="app.setScheduleStageFilter('${s}')" class="px-3.5 py-2 rounded-xl font-bold transition ${this.state.scheduleStageFilter === s ? 'bg-emerald-600 text-white shadow-lg' : 'glass-card text-slate-300'}">
                 ${s === 'all' ? 'All Stages' : s}
               </button>
             `).join('')}
@@ -748,7 +963,7 @@ const app = {
             const sc = statusConfig[p.status] || statusConfig['Upcoming'];
 
             return `
-              <div class="glass-panel p-4 sm:p-5 rounded-3xl border space-y-3 shadow-md hover:border-emerald-500/40 transition">
+              <div class="glass-panel p-5 rounded-3xl border space-y-3 shadow-md hover:border-emerald-500/40 transition">
                 <div class="flex items-center justify-between">
                   <span class="px-2.5 py-0.5 rounded-lg font-mono font-bold text-xs bg-slate-800 text-slate-300">
                     ${p.code}
@@ -806,14 +1021,13 @@ const app = {
     main.innerHTML = `
       <div class="max-w-2xl mx-auto space-y-6">
         
-        <!-- Kid-Friendly Search Card -->
         <div class="glass-panel p-6 sm:p-8 rounded-3xl border text-center space-y-4 shadow-xl">
           <div class="w-14 h-14 rounded-2xl bg-sky-500/20 text-sky-400 mx-auto flex items-center justify-center">
             <i data-lucide="search" class="w-7 h-7"></i>
           </div>
-          <h1 class="font-display font-black text-2xl sm:text-3xl text-white">ചെസ്റ്റ് നമ്പർ തിരയുക (Find Student)</h1>
+          <h1 class="font-display font-black text-2xl sm:text-3xl text-white">Find Participant / Chest Number</h1>
           <p class="text-xs sm:text-sm text-slate-400 max-w-md mx-auto">
-            നിങ്ങളുടെ <strong>Chest Number</strong> (ഉദാ: 101, 103) ടൈപ്പ് ചെയ്ത് മത്സര ഫലങ്ങളും നേടിയ മെഡലുകളും കാണുക.
+            Type any <strong>Chest Number</strong> (e.g. 101, 103) or Student Name to view full event registrations and won prizes.
           </p>
 
           <form onsubmit="app.handleStudentSearchSubmit(event)" class="flex gap-2 max-w-md mx-auto pt-2">
@@ -826,12 +1040,11 @@ const app = {
               autofocus
             >
             <button type="submit" class="px-6 py-3.5 bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-sm rounded-2xl shadow-lg transition flex items-center gap-1.5 shrink-0">
-              <i data-lucide="search" class="w-4 h-4"></i> തിരയുക
+              <i data-lucide="search" class="w-4 h-4"></i> Search
             </button>
           </form>
         </div>
 
-        <!-- Student Profile Card -->
         ${studentDetails ? `
           <div class="glass-panel rounded-3xl p-6 sm:p-8 border shadow-2xl space-y-6">
             
@@ -860,7 +1073,7 @@ const app = {
             <!-- Won Prizes Section -->
             <div class="space-y-3">
               <h3 class="font-display font-black text-base text-white flex items-center gap-2">
-                <i data-lucide="award" class="w-5 h-5 text-amber-400"></i> നേടിയ സമ്മാനങ്ങൾ (Won Prizes)
+                <i data-lucide="award" class="w-5 h-5 text-amber-400"></i> Won Prizes & Accolades
               </h3>
               ${studentDetails.prizes && studentDetails.prizes.length > 0 ? `
                 <div class="space-y-2">
@@ -884,7 +1097,7 @@ const app = {
                 </div>
               ` : `
                 <div class="p-4 rounded-2xl bg-slate-900/30 text-center text-slate-400 text-xs font-semibold">
-                  ഫലങ്ങൾ പ്രഖ്യാപിക്കാൻ കാത്തിരിക്കുന്നു.
+                  No declared prizes yet for this student.
                 </div>
               `}
             </div>
@@ -892,7 +1105,7 @@ const app = {
           </div>
         ` : this.state.searchStudentQuery ? `
           <div class="glass-panel p-8 rounded-3xl text-center text-slate-400 border font-semibold">
-            ചെസ്റ്റ് നമ്പർ "${this.escapeHtml(this.state.searchStudentQuery)}" കണ്ടെത്താനായില്ല.
+            Student with Chest Number "${this.escapeHtml(this.state.searchStudentQuery)}" not found.
           </div>
         ` : ''}
 
@@ -990,9 +1203,9 @@ const app = {
     let startY = 325;
 
     const rankConfigs = [
-      { pos: 1, label: '1ST PLACE (ഒന്നാം സ്ഥാനം)', color: '#fbbf24', bg: 'rgba(245, 158, 11, 0.15)', border: '#f59e0b' },
-      { pos: 2, label: '2ND PLACE (രണ്ടാം സ്ഥാനം)', color: '#e2e8f0', bg: 'rgba(148, 163, 184, 0.12)', border: '#94a3b8' },
-      { pos: 3, label: '3RD PLACE (മൂന്നാം സ്ഥാനം)', color: '#fdba74', bg: 'rgba(194, 65, 12, 0.12)', border: '#c2410c' }
+      { pos: 1, label: '1ST PLACE (FIRST PRIZE)', color: '#fbbf24', bg: 'rgba(245, 158, 11, 0.15)', border: '#f59e0b' },
+      { pos: 2, label: '2ND PLACE (SECOND PRIZE)', color: '#e2e8f0', bg: 'rgba(148, 163, 184, 0.12)', border: '#94a3b8' },
+      { pos: 3, label: '3RD PLACE (THIRD PRIZE)', color: '#fdba74', bg: 'rgba(194, 65, 12, 0.12)', border: '#c2410c' }
     ];
 
     rankConfigs.forEach((rc, idx) => {
@@ -1076,9 +1289,7 @@ const app = {
     }
   },
 
-  // ==========================================
-  // 7. HIDDEN ADMIN CONSOLE
-  // ==========================================
+  // ---------------- ADMIN HUB ----------------
   async renderAdminView() {
     const main = document.getElementById('appMain');
     
@@ -1089,7 +1300,6 @@ const app = {
 
     main.innerHTML = `
       <div class="space-y-6">
-        
         <div class="glass-panel p-4 rounded-3xl border flex flex-wrap items-center justify-between gap-4">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg">
@@ -1234,11 +1444,8 @@ const app = {
     lucide.createIcons();
   },
 
-  // ---------------- ADMIN DASHBOARD TAB ----------------
   async renderAdminDashboard(container) {
-    const info = this.state.festInfo || {};
-    const stats = info.stats || {};
-
+    const stats = this.state.festInfo?.stats || {};
     container.innerHTML = `
       <div class="space-y-6">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1275,7 +1482,7 @@ const app = {
               <i data-lucide="send" class="w-5 h-5"></i>
             </div>
             <div class="font-display font-bold text-sm text-sky-300 truncate">
-              ${info.settings?.telegram_chat_id || 'Not Configured'}
+              ${this.state.festInfo?.settings?.telegram_chat_id || 'Not Configured'}
             </div>
             <button onclick="app.setAdminTab('telegram')" class="text-xs text-sky-400 font-bold">Configure Bot →</button>
           </div>
@@ -1284,9 +1491,9 @@ const app = {
         <div class="glass-panel p-6 rounded-3xl border flex flex-col md:flex-row items-center justify-between gap-4">
           <div class="space-y-1">
             <h3 class="font-display font-black text-lg text-white flex items-center gap-2">
-              <i data-lucide="sparkles" class="w-5 h-5 text-amber-400"></i> ഫലങ്ങൾ പ്രഖ്യാപിക്കാൻ തയ്യാറാണോ?
+              <i data-lucide="sparkles" class="w-5 h-5 text-amber-400"></i> Ready to announce a competition result?
             </h3>
-            <p class="text-xs text-slate-300">വിജയികളെ ചേർത്ത് ഒറ്റ ക്ലിക്കിൽ വെബ്സൈറ്റിലും ടെലിഗ്രാമിലും പബ്ലിഷ് ചെയ്യാം.</p>
+            <p class="text-xs text-slate-300">Publish winners with points, grades, and auto-broadcast to Telegram.</p>
           </div>
           <button onclick="app.setAdminTab('results')" class="px-5 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-2xl shadow-lg transition flex items-center gap-2 shrink-0">
             <i data-lucide="plus-circle" class="w-4 h-4"></i> Declare New Result
@@ -1296,7 +1503,6 @@ const app = {
     `;
   },
 
-  // ---------------- ADMIN STUDENTS TAB ----------------
   async renderAdminStudents(container) {
     let students = [];
     try {
@@ -1722,15 +1928,15 @@ const app = {
           <div class="flex items-center justify-between border-b pb-4">
             <div>
               <h2 class="font-display font-black text-xl text-white flex items-center gap-2">
-                <i data-lucide="award" class="w-6 h-6 text-amber-400"></i> ഫലങ്ങൾ പ്രഖ്യാപിക്കുക (Declare Results)
+                <i data-lucide="award" class="w-6 h-6 text-amber-400"></i> Declare & Publish Result
               </h2>
-              <p class="text-xs text-slate-400">വിജയികളെ തിരഞ്ഞെടുക്കുക, ടെലിഗ്രാമിലേക്ക് തനിയെ പോസ്റ്റ് ചെയ്യുക</p>
+              <p class="text-xs text-slate-400">Assign winners, calculate house marks, and auto-post to Telegram</p>
             </div>
           </div>
 
           <form onsubmit="app.submitResultDeclaration(event)" class="space-y-5 text-left">
             <div>
-              <label class="block text-xs font-bold text-slate-300 uppercase mb-2">മത്സര ഇനം തിരഞ്ഞെടുക്കുക (Select Event) *</label>
+              <label class="block text-xs font-bold text-slate-300 uppercase mb-2">Select Event / Competition *</label>
               <select id="resProgId" class="w-full px-4 py-3 rounded-2xl glass-input text-xs sm:text-sm font-bold bg-slate-900" required>
                 <option value="">-- Choose an Event --</option>
                 ${progs.map(p => `
@@ -1743,7 +1949,7 @@ const app = {
             <div class="p-4 rounded-2xl bg-amber-500/15 border border-amber-500/40 space-y-2">
               <div class="font-black text-xs text-amber-400 uppercase tracking-wider flex items-center gap-2">
                 <span class="w-5 h-5 rounded-full medal-gold flex items-center justify-center text-[10px]">1</span>
-                🥇 ഒന്നാം സ്ഥാനം (First Prize)
+                🥇 1st Place (First Prize)
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
                 <div>
@@ -1771,7 +1977,7 @@ const app = {
                     </select>
                   </div>
                   <div>
-                    <label class="text-[10px] text-slate-400 uppercase font-bold">Points</label>
+                    <label class="text-[10px] text-slate-400 uppercase font-bold">Marks</label>
                     <input id="w1Points" type="number" value="10" class="w-full p-2 rounded-xl glass-input text-xs font-mono font-bold">
                   </div>
                 </div>
@@ -1782,7 +1988,7 @@ const app = {
             <div class="p-4 rounded-2xl bg-slate-800/40 border border-slate-700/60 space-y-2">
               <div class="font-black text-xs text-slate-300 uppercase tracking-wider flex items-center gap-2">
                 <span class="w-5 h-5 rounded-full medal-silver flex items-center justify-center text-[10px]">2</span>
-                🥈 രണ്ടാം സ്ഥാനം (Second Prize)
+                🥈 2nd Place (Second Prize)
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
                 <div>
@@ -1810,7 +2016,7 @@ const app = {
                     </select>
                   </div>
                   <div>
-                    <label class="text-[10px] text-slate-400 uppercase font-bold">Points</label>
+                    <label class="text-[10px] text-slate-400 uppercase font-bold">Marks</label>
                     <input id="w2Points" type="number" value="8" class="w-full p-2 rounded-xl glass-input text-xs font-mono font-bold">
                   </div>
                 </div>
@@ -1821,7 +2027,7 @@ const app = {
             <div class="p-4 rounded-2xl bg-amber-950/20 border border-amber-800/40 space-y-2">
               <div class="font-black text-xs text-amber-500 uppercase tracking-wider flex items-center gap-2">
                 <span class="w-5 h-5 rounded-full medal-bronze flex items-center justify-center text-[10px]">3</span>
-                🥉 മൂന്നാം സ്ഥാനം (Third Prize)
+                🥉 3rd Place (Third Prize)
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
                 <div>
@@ -1849,7 +2055,7 @@ const app = {
                     </select>
                   </div>
                   <div>
-                    <label class="text-[10px] text-slate-400 uppercase font-bold">Points</label>
+                    <label class="text-[10px] text-slate-400 uppercase font-bold">Marks</label>
                     <input id="w3Points" type="number" value="6" class="w-full p-2 rounded-xl glass-input text-xs font-mono font-bold">
                   </div>
                 </div>
@@ -1862,7 +2068,7 @@ const app = {
                 <input id="resSendTelegram" type="checkbox" checked class="w-4 h-4 text-sky-500 rounded">
                 <div>
                   <div class="font-bold text-xs text-sky-300">Broadcast result to Telegram Channel</div>
-                  <div class="text-[11px] text-slate-400">ടെലിഗ്രാം ചാനലിലേക്ക് തത്സമയം മെസ്സേജ് അയക്കുക</div>
+                  <div class="text-[11px] text-slate-400">Instantly pushes formatted winners list & marks to your channel</div>
                 </div>
               </div>
               <i data-lucide="send" class="w-5 h-5 text-sky-400"></i>
@@ -2059,7 +2265,7 @@ const app = {
                 Test Ping
               </button>
               <button type="submit" class="px-5 py-2.5 bg-sky-500 text-slate-950 text-xs font-black rounded-2xl">
-                Save
+                Save Settings
               </button>
             </div>
           </form>
@@ -2202,7 +2408,7 @@ const app = {
     setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
     setTimeout(() => {
       toast.classList.add('opacity-0', 'translate-y-2');
-      setTimeout(() => toast.remove(), 300);
+      setTimeout(() => toast.remove(), 3200);
     }, 3200);
   },
 

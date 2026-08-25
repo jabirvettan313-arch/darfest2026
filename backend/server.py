@@ -25,7 +25,6 @@ os.makedirs(UPLOADS_DIR, exist_ok=True)
 
 class ArtFestHandler(http.server.BaseHTTPRequestHandler):
     def end_headers(self):
-        # Enable CORS
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Pin')
@@ -68,7 +67,6 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
             token_header = token_header[7:]
         token_header = token_header.strip()
 
-        # Check against environment variables
         env_pin = os.environ.get('ADMIN_PIN', '321').strip()
         env_pass = os.environ.get('ADMIN_PASSWORD', 'jabirv 321').strip()
         env_pass_nospace = env_pass.replace(' ', '')
@@ -76,7 +74,6 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
         if token_header in [env_pin, env_pass, env_pass_nospace, 'jabirv 321', 'jabirv321', '321', '1234']:
             return True
 
-        # Check against database settings
         conn = get_db()
         cursor = conn.cursor()
         cursor.execute("SELECT value FROM settings WHERE key = 'admin_pin' OR key = 'admin_pass'")
@@ -101,19 +98,16 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
         path = parsed.path
         query = urllib.parse.parse_qs(parsed.query)
 
-        # 1. API ROUTES
         if path.startswith('/api/'):
             self.handle_api_get(path, query)
             return
 
-        # 2. UPLOADS SERVING
         if path.startswith('/uploads/'):
             filename = os.path.basename(path)
             file_path = os.path.join(UPLOADS_DIR, filename)
             self.serve_static_file(file_path)
             return
 
-        # 3. FRONTEND STATIC ASSETS
         if path == '/' or path == '/index.html':
             self.serve_static_file(os.path.join(FRONTEND_DIR, 'index.html'))
             return
@@ -124,7 +118,6 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
             self.serve_static_file(potential_file)
             return
 
-        # Default fallback for SPA
         self.serve_static_file(os.path.join(FRONTEND_DIR, 'index.html'))
 
     def serve_static_file(self, file_path):
@@ -168,9 +161,50 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
                 cursor.execute('SELECT COUNT(*) FROM results WHERE published = 1')
                 results_declared = cursor.fetchone()[0]
 
-                cursor.execute('SELECT name, points FROM houses ORDER BY points DESC, name ASC LIMIT 1')
+                cursor.execute('SELECT name, points, color, bg_gradient FROM houses ORDER BY points DESC, name ASC LIMIT 1')
                 top_house_row = cursor.fetchone()
                 top_house = dict(top_house_row) if top_house_row else None
+
+                # Category Champions (Leading House in each category)
+                cursor.execute('''
+                    SELECT c.id as category_id, c.name as category_name, h.id as house_id, h.name as house_name, h.color as house_color,
+                           SUM(rw.points_awarded) as total_cat_points
+                    FROM categories c
+                    JOIN programmes p ON c.id = p.category_id
+                    JOIN results r ON p.id = r.programme_id
+                    JOIN result_winners rw ON r.id = rw.result_id
+                    JOIN houses h ON rw.house_id = h.id
+                    WHERE r.published = 1
+                    GROUP BY c.id, h.id
+                    ORDER BY c.id ASC, total_cat_points DESC
+                ''')
+                cat_rows = cursor.fetchall()
+                category_champions = {}
+                for row in cat_rows:
+                    cid = row['category_id']
+                    if cid not in category_champions:
+                        category_champions[cid] = {
+                            "category_name": row['category_name'],
+                            "house_name": row['house_name'],
+                            "house_color": row['house_color'],
+                            "points": row['total_cat_points']
+                        }
+
+                # Top Individual Champions (Top Scorers)
+                cursor.execute('''
+                    SELECT s.id, s.chest_no, s.name, s.house_id, h.name as house_name, h.color as house_color,
+                           SUM(rw.points_awarded) as total_points,
+                           COUNT(rw.id) as prize_count
+                    FROM result_winners rw
+                    JOIN results r ON rw.result_id = r.id
+                    JOIN students s ON (rw.student_id = s.id OR rw.chest_no = s.chest_no)
+                    LEFT JOIN houses h ON s.house_id = h.id
+                    WHERE r.published = 1
+                    GROUP BY s.id
+                    ORDER BY total_points DESC, prize_count DESC
+                    LIMIT 3
+                ''')
+                individual_champions = [dict(r) for r in cursor.fetchall()]
 
                 self.send_json({
                     "success": True,
@@ -180,7 +214,9 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
                         "total_programmes": total_programmes,
                         "results_declared": results_declared,
                         "top_house": top_house
-                    }
+                    },
+                    "category_champions": list(category_champions.values()),
+                    "individual_champions": individual_champions
                 })
                 return
 
@@ -317,11 +353,14 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
                 self.send_json({"success": True, "programme": prog_dict})
                 return
 
-            # GET /api/results
+            # GET /api/results (Advanced Filtering & Search)
             if path == '/api/results':
                 cat_filter = query.get('category_id', [None])[0]
                 house_filter = query.get('house_id', [None])[0]
+                type_filter = query.get('type', [None])[0]
+                format_filter = query.get('format', [None])[0]
                 search = query.get('search', [None])[0]
+                sort = query.get('sort', ['latest'])[0]
 
                 sql = '''
                     SELECT r.id as result_id, r.programme_id, r.published, r.published_at, r.photo_url as result_photo, r.notes,
@@ -336,12 +375,18 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
                 if cat_filter:
                     sql += ' AND p.category_id = ?'
                     params.append(cat_filter)
-                if search:
-                    sql += ' AND (p.name LIKE ? OR p.code LIKE ?)'
-                    term = f'%{search}%'
-                    params.extend([term, term])
+                if type_filter:
+                    sql += ' AND p.type = ?'
+                    params.append(type_filter)
+                if format_filter:
+                    sql += ' AND p.format = ?'
+                    params.append(format_filter)
 
-                sql += ' ORDER BY r.published_at DESC, r.id DESC'
+                if sort == 'code':
+                    sql += ' ORDER BY p.code ASC'
+                else:
+                    sql += ' ORDER BY r.published_at DESC, r.id DESC'
+
                 cursor.execute(sql, params)
                 results_rows = cursor.fetchall()
                 results_list = []
@@ -361,10 +406,17 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
                         if not any(str(w['house_id']) == str(house_filter) for w in winners):
                             continue
 
+                    if search:
+                        term = search.lower()
+                        match_prog = term in res_obj['programme_name'].lower() or term in res_obj['programme_code'].lower()
+                        match_winner = any(term in (w.get('student_name', '')).lower() or term in str(w.get('chest_no', '')).lower() for w in winners)
+                        if not (match_prog or match_winner):
+                            continue
+
                     res_obj['winners'] = winners
                     results_list.append(res_obj)
 
-                self.send_json({"success": True, "results": results_list})
+                self.send_json({"success": True, "results": results_list, "total_count": len(results_list)})
                 return
 
             # GET /api/students
@@ -555,30 +607,6 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
                     self.send_json({"success": True, "student_id": student_id, "message": "Student added successfully"})
                 except Exception as e:
                     self.send_error_json(f"Could not add student: {str(e)}", 400)
-                return
-
-            # POST /api/admin/students/bulk
-            if path == '/api/admin/students/bulk':
-                students_list = data.get('students', [])
-                if not isinstance(students_list, list) or len(students_list) == 0:
-                    self.send_error_json("Invalid students list", 400)
-                    return
-
-                added_count = 0
-                for s in students_list:
-                    chest_no = str(s.get('chest_no', '')).strip()
-                    name = s.get('name', '').strip()
-                    house_id = s.get('house_id')
-                    category_id = s.get('category_id')
-                    phone = s.get('phone', '')
-                    if chest_no and name:
-                        cursor.execute('''
-                            INSERT OR REPLACE INTO students (chest_no, name, house_id, category_id, phone)
-                            VALUES (?, ?, ?, ?, ?)
-                        ''', (chest_no, name, house_id, category_id, phone))
-                        added_count += 1
-                conn.commit()
-                self.send_json({"success": True, "added_count": added_count, "message": f"{added_count} students imported successfully"})
                 return
 
             # POST /api/admin/programmes
@@ -786,53 +814,12 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
                 self.send_json(res)
                 return
 
-            # POST /api/admin/telegram/broadcast
-            if path == '/api/admin/telegram/broadcast':
-                bot_token = self.get_setting('telegram_bot_token', '')
-                chat_id = self.get_setting('telegram_chat_id', '')
-                text = data.get('text', '').strip()
-                photo_url = data.get('photo_url', '')
-
-                if not bot_token or not chat_id:
-                    self.send_error_json("Telegram Bot is not configured yet. Configure Bot Token and Chat ID first.", 400)
-                    return
-                if not text:
-                    self.send_error_json("Message text cannot be empty", 400)
-                    return
-
-                if photo_url:
-                    local_photo = os.path.join(BASE_DIR, photo_url.lstrip('/')) if photo_url.startswith('/uploads/') else photo_url
-                    res = TelegramService.send_photo(bot_token, chat_id, local_photo, caption=text)
-                else:
-                    res = TelegramService.send_message(bot_token, chat_id, text)
-
-                self.send_json(res)
-                return
-
             # POST /api/admin/settings
             if path == '/api/admin/settings':
                 for k, v in data.items():
                     cursor.execute('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', (k, str(v)))
                 conn.commit()
                 self.send_json({"success": True, "message": "Fest settings updated successfully"})
-                return
-
-            # POST /api/admin/reset-data
-            if path == '/api/admin/reset-data':
-                cursor.execute('DELETE FROM result_winners')
-                cursor.execute('DELETE FROM results')
-                cursor.execute('DELETE FROM student_programmes')
-                cursor.execute('DELETE FROM students')
-                cursor.execute('DELETE FROM programmes')
-                cursor.execute('DELETE FROM announcements')
-                cursor.execute('DELETE FROM settings')
-                cursor.execute('DELETE FROM categories')
-                cursor.execute('DELETE FROM houses')
-                conn.commit()
-                from database import seed_default_data, sync_env_to_settings
-                seed_default_data(cursor, conn)
-                sync_env_to_settings(cursor, conn)
-                self.send_json({"success": True, "message": "Database reset to default demo dataset successfully"})
                 return
 
             self.send_error_json("Endpoint not found", 404)
@@ -864,19 +851,12 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
                 name = data.get('name', '').strip()
                 house_id = data.get('house_id')
                 category_id = data.get('category_id')
-                phone = data.get('phone', '')
 
                 cursor.execute('''
                     UPDATE students 
-                    SET chest_no = ?, name = ?, house_id = ?, category_id = ?, phone = ?
+                    SET chest_no = ?, name = ?, house_id = ?, category_id = ?
                     WHERE id = ?
-                ''', (chest_no, name, house_id, category_id, phone, st_id))
-
-                if 'programme_ids' in data:
-                    cursor.execute('DELETE FROM student_programmes WHERE student_id = ?', (st_id,))
-                    for pid in data['programme_ids']:
-                        cursor.execute('INSERT OR IGNORE INTO student_programmes (student_id, programme_id) VALUES (?, ?)', (st_id, pid))
-
+                ''', (chest_no, name, house_id, category_id, st_id))
                 conn.commit()
                 self.send_json({"success": True, "message": "Student updated successfully"})
                 return
@@ -889,20 +869,15 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
                 name = data.get('name', '').strip()
                 category_id = data.get('category_id')
                 prog_type = data.get('type', 'On-Stage')
-                prog_format = data.get('format', 'Solo')
                 stage_name = data.get('stage_name', 'Stage 1')
-                scheduled_date = data.get('scheduled_date', '')
                 scheduled_time = data.get('scheduled_time', '')
                 status = data.get('status', 'Upcoming')
-                first_pts = int(data.get('first_points', 5))
-                second_pts = int(data.get('second_points', 3))
-                third_pts = int(data.get('third_points', 1))
 
                 cursor.execute('''
                     UPDATE programmes
-                    SET code = ?, name = ?, category_id = ?, type = ?, format = ?, stage_name = ?, scheduled_date = ?, scheduled_time = ?, status = ?, first_points = ?, second_points = ?, third_points = ?
+                    SET code = ?, name = ?, category_id = ?, type = ?, stage_name = ?, scheduled_time = ?, status = ?
                     WHERE id = ?
-                ''', (code, name, category_id, prog_type, prog_format, stage_name, scheduled_date, scheduled_time, status, first_pts, second_pts, third_pts, prog_id))
+                ''', (code, name, category_id, prog_type, stage_name, scheduled_time, status, prog_id))
                 conn.commit()
                 self.send_json({"success": True, "message": "Programme updated successfully"})
                 return
@@ -1028,7 +1003,6 @@ def run_server(port=PORT, host=HOST):
     server_address = (host, port)
     httpd = ThreadedHTTPServer(server_address, ArtFestHandler)
     print(f"🎉 DARFEST 2026 Server running at http://{host}:{port}/")
-    print(f"🔒 Hidden Admin Console at http://{host}:{port}/#/admin (Password: jabirv 321 | PIN: 321)")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
