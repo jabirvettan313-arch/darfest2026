@@ -300,141 +300,47 @@ const app = {
         </div>
       </section>
 
-      <!-- 2. Main Fest Champion & Category Champions Showcase -->
-      <section class="mb-10 space-y-5">
-        <div>
-          <h2 class="font-display font-black text-xl sm:text-2xl text-white flex items-center gap-2">
-            <i data-lucide="crown" class="w-6 h-6 text-amber-400"></i> Festival Champions & Titles
+      <!-- 2. Team Overall (House Scoreboard with Cups) -->
+      <section class="mb-10 space-y-8 mt-12">
+        <div class="text-center">
+          <h2 class="font-display font-black text-2xl sm:text-3xl text-white flex items-center justify-center gap-2">
+            <i data-lucide="bar-chart-2" class="w-7 h-7 text-indigo-400"></i> Team Overall
           </h2>
-          <p class="text-xs sm:text-sm text-slate-400">Leading championship house and category toppers</p>
+          <p class="text-xs sm:text-sm text-slate-400 mt-1">Current House Standings</p>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          
-          <!-- Overall Main Champion House Card -->
-          <div class="lg:col-span-1 glass-panel rounded-3xl p-6 border-2 border-amber-500/60 relative overflow-hidden shadow-2xl bg-gradient-to-br from-amber-950/40 via-slate-900 to-slate-900 flex flex-col justify-between">
-            <div class="absolute -right-8 -top-8 w-32 h-32 bg-amber-500/15 rounded-full blur-2xl"></div>
-            
-            <div class="space-y-2 relative z-10">
-              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-black uppercase">
-                <i data-lucide="crown" class="w-3.5 h-3.5"></i> Overall Fest Champion
-              </div>
-              <h3 class="font-display font-black text-2xl sm:text-3xl text-white">
-                ${topHouse ? this.escapeHtml(topHouse.name) : 'Contest in Progress'}
-              </h3>
-              <p class="text-xs text-slate-300">Currently holding 1st place in overall points tally.</p>
-            </div>
-
-            <div class="pt-6 relative z-10">
-              <div class="flex items-baseline gap-2 mb-2">
-                <span class="font-display font-black text-4xl text-amber-400">${topHouse ? topHouse.points : 0}</span>
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Marks</span>
-              </div>
-              <div class="text-xs text-amber-300 font-mono font-bold">
-                🥇 ${houses[0]?.gold_count || 0} Gold • 🥈 ${houses[0]?.silver_count || 0} Silver • 🥉 ${houses[0]?.bronze_count || 0} Bronze
-              </div>
-            </div>
-          </div>
-
-          <!-- Category Champions (Sub-Junior, Junior, Senior, General) -->
-          <div class="lg:col-span-2 glass-panel rounded-3xl p-6 border space-y-4 shadow-xl">
-            <div class="flex items-center justify-between border-b pb-3">
-              <h3 class="font-display font-bold text-base text-white flex items-center gap-2">
-                <i data-lucide="award" class="w-4 h-4 text-indigo-400"></i> Category Champions
-              </h3>
-              <span class="text-xs text-slate-400 font-medium">Leading House per Category</span>
-            </div>
-
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              ${categoryChampions.length > 0 ? categoryChampions.map(c => `
-                <div class="p-3.5 rounded-2xl bg-slate-900/60 border text-center space-y-1 hover:scale-105 transition duration-200">
-                  <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">${c.category_name}</span>
-                  <div class="font-display font-black text-sm text-white truncate">${this.escapeHtml(c.house_name)}</div>
-                  <div class="text-xs font-black text-amber-400 font-mono">+${c.points} pts</div>
-                </div>
-              `).join('') : `
-                <div class="col-span-4 text-center text-slate-500 text-xs py-4">Category champions will be finalized as results are declared.</div>
-              `}
-            </div>
-
-            <!-- Top Individual Performers -->
-            <div class="pt-3 border-t">
-              <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i> Top Star Performers (Highest Individual Points)
-              </div>
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                ${individualChampions.map((s, idx) => `
-                  <div class="p-2.5 rounded-xl bg-slate-900/40 border flex items-center justify-between text-xs">
-                    <div class="flex items-center gap-2">
-                      <span class="w-5 h-5 rounded-full ${idx === 0 ? 'medal-gold' : idx === 1 ? 'medal-silver' : 'medal-bronze'} flex items-center justify-center font-bold text-[10px]">
-                        ${idx + 1}
-                      </span>
-                      <div>
-                        <div class="font-bold text-white">${this.escapeHtml(s.name)}</div>
-                        <div class="text-[10px] text-slate-400">#${s.chest_no} • ${s.house_name}</div>
-                      </div>
-                    </div>
-                    <div class="font-mono font-bold text-amber-400">${s.total_points} pts</div>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      <!-- 3. Overall Marks & House Scoreboard Section -->
-      <section class="mb-10 space-y-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="font-display font-black text-xl sm:text-2xl text-white flex items-center gap-2">
-              <i data-lucide="bar-chart-2" class="w-6 h-6 text-indigo-400"></i> Overall Points Tally (House Scoreboard)
-            </h2>
-            <p class="text-xs sm:text-sm text-slate-400">Real-time aggregate marks scored across all competitive events</p>
-          </div>
-          <a href="#/leaderboard" class="text-xs font-bold text-indigo-400 hover:text-indigo-300">Detailed Breakdown →</a>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="flex flex-wrap justify-center gap-6 sm:gap-12 items-end pb-4">
           ${houses.map((h, index) => {
-            const ranks = ['🥇 1st Place', '🥈 2nd Place', '🥉 3rd Place', '4th Place'];
-            const isLeader = index === 0;
+            let cupSize = "w-10 h-10";
+            let cupColor = "text-amber-600";
+            let cupWrapper = "p-3 bg-amber-900/30";
+            
+            if (index === 0) { 
+              cupSize = "w-24 h-24"; 
+              cupColor = "text-amber-400"; 
+              cupWrapper = "p-6 bg-amber-500/20 shadow-[0_0_40px_rgba(251,191,36,0.2)]"; 
+            } else if (index === 1) { 
+              cupSize = "w-16 h-16"; 
+              cupColor = "text-slate-300"; 
+              cupWrapper = "p-5 bg-slate-500/20"; 
+            } else if (index === 2) { 
+              cupSize = "w-12 h-12"; 
+              cupColor = "text-amber-600"; 
+              cupWrapper = "p-4 bg-amber-700/20"; 
+            }
 
             return `
-              <div class="glass-panel rounded-3xl p-5 border ${isLeader ? 'border-amber-500/60 shadow-xl shadow-amber-500/10' : ''} relative overflow-hidden group hover:-translate-y-1 transition duration-200">
-                <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${h.bg_gradient}"></div>
-                
-                <div class="flex items-center justify-between mb-3">
-                  <span class="px-2.5 py-0.5 rounded-full text-xs font-black ${isLeader ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-slate-800 text-slate-300'}">
-                    ${ranks[index] || `#${index + 1}`}
+              <div class="flex flex-col items-center group">
+                <div class="${cupWrapper} rounded-full mb-4 flex items-center justify-center border border-white/5 transition-transform duration-300 group-hover:-translate-y-2 relative">
+                  <i data-lucide="trophy" class="${cupSize} ${cupColor}"></i>
+                  <span class="absolute -bottom-2 -right-2 w-7 h-7 rounded-full bg-slate-800 border border-slate-700 text-xs font-black flex items-center justify-center text-white">
+                    #${index + 1}
                   </span>
-                  <div class="w-7 h-7 rounded-full flex items-center justify-center text-white font-black text-xs shadow" style="background-color: ${h.color}">
-                    ${h.code.slice(0, 2)}
-                  </div>
                 </div>
-
-                <h3 class="font-display font-black text-lg text-white mb-1">${this.escapeHtml(h.name)}</h3>
-                
-                <div class="flex items-baseline gap-2 my-2">
-                  <span class="font-display font-black text-3xl sm:text-4xl text-white tracking-tight">${h.points}</span>
-                  <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Marks</span>
-                </div>
-
-                <div class="grid grid-cols-3 gap-1.5 pt-3 border-t text-center text-xs">
-                  <div class="bg-slate-900/50 py-1.5 rounded-xl">
-                    <div class="font-bold text-amber-400">${h.gold_count || 0}</div>
-                    <div class="text-[10px] text-slate-500">Gold</div>
-                  </div>
-                  <div class="bg-slate-900/50 py-1.5 rounded-xl">
-                    <div class="font-bold text-slate-300">${h.silver_count || 0}</div>
-                    <div class="text-[10px] text-slate-500">Silver</div>
-                  </div>
-                  <div class="bg-slate-900/50 py-1.5 rounded-xl">
-                    <div class="font-bold text-amber-600">${h.bronze_count || 0}</div>
-                    <div class="text-[10px] text-slate-500">Bronze</div>
-                  </div>
+                <h3 class="font-display font-black text-lg sm:text-xl text-white mb-1">${this.escapeHtml(h.name)}</h3>
+                <div class="flex items-center gap-1.5">
+                  <span class="font-black text-2xl sm:text-3xl" style="color: ${h.color}">${h.points}</span>
+                  <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Pts</span>
                 </div>
               </div>
             `;
@@ -442,37 +348,34 @@ const app = {
         </div>
       </section>
 
-      <!-- 4. Introduction to Results Page (Dedicated Results Hub Teaser) -->
-      <section class="mb-10">
-        <div class="glass-panel p-6 sm:p-8 rounded-3xl border border-indigo-500/30 bg-gradient-to-r from-indigo-950/40 via-slate-900 to-purple-950/40 shadow-2xl space-y-6">
-          
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4">
-            <div class="space-y-1">
-              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold uppercase tracking-wider">
-                <i data-lucide="trophy" class="w-3.5 h-3.5 text-amber-400"></i> Official Result Publishing Portal
-              </div>
-              <h2 class="font-display font-black text-2xl sm:text-3xl text-white">
-                Live Declared Results & Winner Certificates
-              </h2>
-              <p class="text-xs sm:text-sm text-slate-300 max-w-2xl">
-                Every declared festival result is verified and updated in real-time with 1st, 2nd, and 3rd place winners, grades (A, B, C), awarded house points, and downloadable high-resolution social posters.
-              </p>
-            </div>
-
-            <a href="#/results" class="px-6 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs sm:text-sm rounded-2xl shadow-xl shadow-indigo-600/30 transition flex items-center gap-2 shrink-0">
-              <span>View All Results</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
-            </a>
-          </div>
-
-          <!-- Recent Declared Results Stream -->
-          <div>
-            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Recently Declared Events:</div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              ${recentResults.map(r => this.renderResultCardHtml(r)).join('')}
-            </div>
-          </div>
-
+      <!-- 3. Category Champions & Top Performers -->
+      <section class="mb-12 space-y-6 pt-6 border-t border-slate-800">
+        <div class="text-center">
+          <h2 class="font-display font-black text-xl sm:text-2xl text-white flex items-center justify-center gap-2">
+            <i data-lucide="award" class="w-6 h-6 text-amber-400"></i> Champions of Category
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-400 mt-1">Leading House per Category</p>
         </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto">
+          ${categoryChampions.length > 0 ? categoryChampions.map(c => `
+            <div class="p-5 rounded-3xl bg-slate-900/60 border text-center space-y-2 hover:scale-105 transition duration-200">
+              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">${c.category_name}</span>
+              <div class="font-display font-black text-base sm:text-lg text-white truncate">${this.escapeHtml(c.house_name)}</div>
+              <div class="text-xs sm:text-sm font-black text-amber-400 font-mono">+${c.points} pts</div>
+            </div>
+          `).join('') : `
+            <div class="col-span-4 text-center text-slate-500 text-xs py-4">Category champions will be finalized as results are declared.</div>
+          `}
+        </div>
+      </section>
+
+      <!-- 4. View More Results -->
+      <section class="mb-10 text-center pb-8">
+        <a href="#/results" class="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-black text-sm shadow-xl shadow-indigo-600/30 transition hover:scale-105">
+          <span>View More Results</span>
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </a>
       </section>
 
     `;
