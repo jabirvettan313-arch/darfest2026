@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: darfest2026
+    runtime: python
+    buildCommand: ""
+    startCommand: python3 backend/server.py
+    envVars:
+      - key: FEST_NAME
+        value: DARFEST 2026
+      - key: FEST_TAGLINE
+        value: Annual Arts & Cultural Festival
+      - key: ADMIN_PASSWORD
+        value: jabirv 321
+      - key: ADMIN_PIN
+        value: 321
+      - key: TELEGRAM_BOT_TOKEN
+        value: 8582305977:AAH1JLYb0uzelhnU8JQRhXI6DCfNb8mFhdk
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+      - key: TELEGRAM_AUTO_POST
+        value: "true"
+      - key: TELEGRAM_HASHTAG
+        value: "#DarFest2026 #ArtFestResults"
