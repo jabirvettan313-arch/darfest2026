@@ -2005,7 +2005,6 @@ const app = {
       this.showToast('Failed to save programme', 'error');
     }
   },
-  },
 
   async deleteProgramme(id) {
     if (!confirm('Delete this programme?')) return;
