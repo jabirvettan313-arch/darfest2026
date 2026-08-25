@@ -1470,50 +1470,157 @@ const app = {
 
   async renderAdminDashboard(container) {
     const stats = this.state.festInfo?.stats || {};
+    const houses = this.state.houses || [];
+    const announcements = this.state.announcements || [];
+
     container.innerHTML = `
       <div class="space-y-6">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div class="glass-panel p-5 rounded-3xl border space-y-2">
-            <div class="flex items-center justify-between text-indigo-400">
-              <span class="text-xs font-bold uppercase">Students</span>
-              <i data-lucide="users" class="w-5 h-5"></i>
+
+        <!-- Title -->
+        <div>
+          <h2 class="font-display font-black text-xl text-white flex items-center gap-2">
+            <i data-lucide="layout-dashboard" class="w-5 h-5 text-indigo-400"></i> Dashboard Overview
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">Manage all sections of MUBARAZA from here</p>
+        </div>
+
+        <!-- Stat Cards Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-4">
+
+          <!-- Students -->
+          <div class="glass-panel p-5 rounded-3xl border space-y-3 hover:border-indigo-500/40 transition cursor-pointer" onclick="app.setAdminTab('students')">
+            <div class="flex items-center justify-between">
+              <div class="w-10 h-10 rounded-2xl bg-indigo-500/20 flex items-center justify-center">
+                <i data-lucide="users" class="w-5 h-5 text-indigo-400"></i>
+              </div>
+              <span class="text-[10px] font-black uppercase text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded-full">Students</span>
             </div>
-            <div class="font-display font-black text-3xl text-white">${stats.total_students || 0}</div>
-            <button onclick="app.setAdminTab('students')" class="text-xs text-indigo-400 font-bold">Manage Students →</button>
+            <div class="font-display font-black text-4xl text-white">${stats.total_students || 0}</div>
+            <div class="text-xs text-indigo-400 font-bold flex items-center gap-1">
+              Manage Students <i data-lucide="arrow-right" class="w-3 h-3"></i>
+            </div>
           </div>
 
-          <div class="glass-panel p-5 rounded-3xl border space-y-2">
-            <div class="flex items-center justify-between text-purple-400">
-              <span class="text-xs font-bold uppercase">Events</span>
-              <i data-lucide="layout-grid" class="w-5 h-5"></i>
+          <!-- Events -->
+          <div class="glass-panel p-5 rounded-3xl border space-y-3 hover:border-purple-500/40 transition cursor-pointer" onclick="app.setAdminTab('programmes')">
+            <div class="flex items-center justify-between">
+              <div class="w-10 h-10 rounded-2xl bg-purple-500/20 flex items-center justify-center">
+                <i data-lucide="calendar" class="w-5 h-5 text-purple-400"></i>
+              </div>
+              <span class="text-[10px] font-black uppercase text-purple-400 bg-purple-500/10 px-2 py-1 rounded-full">Events</span>
             </div>
-            <div class="font-display font-black text-3xl text-white">${stats.total_programmes || 0}</div>
-            <button onclick="app.setAdminTab('programmes')" class="text-xs text-purple-400 font-bold">Manage Events →</button>
+            <div class="font-display font-black text-4xl text-white">${stats.total_programmes || 0}</div>
+            <div class="text-xs text-purple-400 font-bold flex items-center gap-1">
+              Manage Events <i data-lucide="arrow-right" class="w-3 h-3"></i>
+            </div>
           </div>
 
-          <div class="glass-panel p-5 rounded-3xl border space-y-2">
-            <div class="flex items-center justify-between text-amber-400">
-              <span class="text-xs font-bold uppercase">Results Out</span>
-              <i data-lucide="trophy" class="w-5 h-5"></i>
+          <!-- Results -->
+          <div class="glass-panel p-5 rounded-3xl border space-y-3 hover:border-amber-500/40 transition cursor-pointer" onclick="app.setAdminTab('results')">
+            <div class="flex items-center justify-between">
+              <div class="w-10 h-10 rounded-2xl bg-amber-500/20 flex items-center justify-center">
+                <i data-lucide="trophy" class="w-5 h-5 text-amber-400"></i>
+              </div>
+              <span class="text-[10px] font-black uppercase text-amber-400 bg-amber-500/10 px-2 py-1 rounded-full">Results</span>
             </div>
-            <div class="font-display font-black text-3xl text-white">${stats.results_declared || 0}</div>
-            <button onclick="app.setAdminTab('results')" class="text-xs text-amber-400 font-bold">Declare Results →</button>
+            <div class="font-display font-black text-4xl text-white">${stats.results_declared || 0}</div>
+            <div class="text-xs text-amber-400 font-bold flex items-center gap-1">
+              Declare Results <i data-lucide="arrow-right" class="w-3 h-3"></i>
+            </div>
+          </div>
+
+          <!-- Teams -->
+          <div class="glass-panel p-5 rounded-3xl border space-y-3 hover:border-emerald-500/40 transition cursor-pointer" onclick="app.setAdminTab('teams')">
+            <div class="flex items-center justify-between">
+              <div class="w-10 h-10 rounded-2xl bg-emerald-500/20 flex items-center justify-center">
+                <i data-lucide="shield" class="w-5 h-5 text-emerald-400"></i>
+              </div>
+              <span class="text-[10px] font-black uppercase text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-full">Teams</span>
+            </div>
+            <div class="font-display font-black text-4xl text-white">${houses.length}</div>
+            <div class="text-xs text-emerald-400 font-bold flex items-center gap-1">
+              Manage Teams <i data-lucide="arrow-right" class="w-3 h-3"></i>
+            </div>
+          </div>
+
+          <!-- Announcements -->
+          <div class="glass-panel p-5 rounded-3xl border space-y-3 hover:border-sky-500/40 transition cursor-pointer" onclick="app.setAdminTab('announcements')">
+            <div class="flex items-center justify-between">
+              <div class="w-10 h-10 rounded-2xl bg-sky-500/20 flex items-center justify-center">
+                <i data-lucide="bell" class="w-5 h-5 text-sky-400"></i>
+              </div>
+              <span class="text-[10px] font-black uppercase text-sky-400 bg-sky-500/10 px-2 py-1 rounded-full">Notices</span>
+            </div>
+            <div class="font-display font-black text-4xl text-white">${announcements.length}</div>
+            <div class="text-xs text-sky-400 font-bold flex items-center gap-1">
+              Announcements <i data-lucide="arrow-right" class="w-3 h-3"></i>
+            </div>
+          </div>
+
+          <!-- Settings -->
+          <div class="glass-panel p-5 rounded-3xl border space-y-3 hover:border-rose-500/40 transition cursor-pointer" onclick="app.setAdminTab('settings')">
+            <div class="flex items-center justify-between">
+              <div class="w-10 h-10 rounded-2xl bg-rose-500/20 flex items-center justify-center">
+                <i data-lucide="settings" class="w-5 h-5 text-rose-400"></i>
+              </div>
+              <span class="text-[10px] font-black uppercase text-rose-400 bg-rose-500/10 px-2 py-1 rounded-full">Settings</span>
+            </div>
+            <div class="font-display font-black text-4xl text-white">⚙️</div>
+            <div class="text-xs text-rose-400 font-bold flex items-center gap-1">
+              Fest Settings <i data-lucide="arrow-right" class="w-3 h-3"></i>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="glass-panel p-6 rounded-3xl border">
+          <h3 class="font-display font-black text-base text-white mb-4 flex items-center gap-2">
+            <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i> Quick Actions
+          </h3>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <button onclick="app.setAdminTab('results')"
+              class="px-4 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-2xl transition flex items-center justify-center gap-2 shadow-lg">
+              <i data-lucide="plus-circle" class="w-4 h-4"></i> New Result
+            </button>
+            <button onclick="app.setAdminTab('students')"
+              class="px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black rounded-2xl transition flex items-center justify-center gap-2 shadow-lg">
+              <i data-lucide="user-plus" class="w-4 h-4"></i> Add Student
+            </button>
+            <button onclick="app.setAdminTab('announcements')"
+              class="px-4 py-3 bg-sky-600 hover:bg-sky-500 text-white text-xs font-black rounded-2xl transition flex items-center justify-center gap-2 shadow-lg">
+              <i data-lucide="bell-plus" class="w-4 h-4"></i> Announce
+            </button>
+            <button onclick="app.setAdminTab('teams')"
+              class="px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black rounded-2xl transition flex items-center justify-center gap-2 shadow-lg">
+              <i data-lucide="shield-plus" class="w-4 h-4"></i> Add Team
+            </button>
           </div>
         </div>
 
-        <div class="glass-panel p-6 rounded-3xl border flex flex-col md:flex-row items-center justify-between gap-4">
-          <div class="space-y-1">
-            <h3 class="font-display font-black text-lg text-white flex items-center gap-2">
-              <i data-lucide="sparkles" class="w-5 h-5 text-amber-400"></i> Ready to announce a competition result?
-            </h3>
-            <p class="text-xs text-slate-300">Publish winners with points and grades.</p>
+        <!-- Team Leaderboard preview -->
+        <div class="glass-panel p-6 rounded-3xl border">
+          <h3 class="font-display font-black text-base text-white mb-4 flex items-center gap-2">
+            <i data-lucide="bar-chart-2" class="w-4 h-4 text-indigo-400"></i> Team Standings
+          </h3>
+          <div class="space-y-3">
+            ${[...houses].sort((a,b)=>b.points-a.points).map((h,i)=>`
+              <div class="flex items-center gap-3">
+                <span class="w-6 h-6 flex items-center justify-center rounded-full font-black text-xs ${i===0?'bg-amber-500 text-slate-950':i===1?'bg-slate-400 text-slate-950':i===2?'bg-orange-700 text-white':'bg-slate-800 text-slate-400'}">${i+1}</span>
+                <div class="w-7 h-7 rounded-xl flex items-center justify-center font-black text-xs" style="background-color:${h.color}22;color:${h.color};border:1px solid ${h.color}44">${(h.code||'').substring(0,2)}</div>
+                <span class="flex-1 font-bold text-sm text-white">${h.name}</span>
+                <div class="h-2 rounded-full flex-1 max-w-[120px] bg-slate-800 overflow-hidden">
+                  <div class="h-full rounded-full" style="width:${houses[0]?.points?Math.round(h.points/houses[0].points*100):0}%;background-color:${h.color}"></div>
+                </div>
+                <span class="font-black text-sm min-w-[50px] text-right" style="color:${h.color}">${h.points} pts</span>
+              </div>
+            `).join('')}
           </div>
-          <button onclick="app.setAdminTab('results')" class="px-5 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-2xl shadow-lg transition flex items-center gap-2 shrink-0">
-            <i data-lucide="plus-circle" class="w-4 h-4"></i> Declare New Result
-          </button>
         </div>
+
       </div>
     `;
+    lucide.createIcons();
   },
 
   async renderAdminStudents(container) {
