@@ -1586,9 +1586,25 @@ const app = {
     }
   },
 
-  openAddStudentModal() {
+  async openAddStudentModal() {
     const modal = document.getElementById('studentFormModal');
     if (!modal) return;
+
+    let autoChestNo = '';
+    try {
+      const res = await fetch(`${API_BASE}/students`).then(r => r.json());
+      if (res.success && res.students.length > 0) {
+        // Try to find the highest numeric chest number
+        let max = 0;
+        res.students.forEach(s => {
+           const num = parseInt(s.chest_no);
+           if (!isNaN(num) && num > max) max = num;
+        });
+        if (max > 0) autoChestNo = (max + 1).toString();
+      } else {
+        autoChestNo = '101'; // Default starting chest number
+      }
+    } catch(e) {}
 
     modal.innerHTML = `
       <div class="glass-panel max-w-md w-full rounded-3xl overflow-hidden shadow-2xl border p-6 space-y-4 max-h-[90vh] overflow-y-auto">
@@ -1608,7 +1624,7 @@ const app = {
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Chest Number *</label>
-            <input id="stChestNo" type="text" placeholder="e.g. 111" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-mono font-bold" required>
+            <input id="stChestNo" type="text" value="${autoChestNo}" placeholder="e.g. 111" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-mono font-bold" required>
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Full Name *</label>
@@ -1628,11 +1644,6 @@ const app = {
               </select>
             </div>
           </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Phone</label>
-            <input id="stPhone" type="text" placeholder="Phone number" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-mono">
-          </div>
-
           <div class="pt-2 flex justify-end gap-2">
             <button type="button" onclick="app.closeStudentModal()" class="px-4 py-2 rounded-xl glass-card text-xs font-bold">Cancel</button>
             <button type="submit" class="px-5 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black">Save Student</button>
