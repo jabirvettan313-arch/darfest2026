@@ -469,30 +469,6 @@ const app = {
         </div>
       </section>
 
-      <!-- 5. Fast Chest Number Search Card -->
-      <section>
-        <div class="glass-panel p-6 sm:p-8 rounded-3xl border text-center space-y-4 shadow-xl">
-          <div class="w-12 h-12 rounded-2xl bg-sky-500/20 text-sky-400 mx-auto flex items-center justify-center">
-            <i data-lucide="search" class="w-6 h-6"></i>
-          </div>
-          <h2 class="font-display font-black text-2xl text-white">Instant Participant Finder</h2>
-          <p class="text-xs sm:text-sm text-slate-400 max-w-md mx-auto">
-            Type any student's <strong>Chest Number</strong> or Name to view their registered items and medals won.
-          </p>
-
-          <form onsubmit="app.handleHomeSearch(event)" class="flex gap-2 max-w-md mx-auto">
-            <input 
-              id="homeChestSearch" 
-              type="text" 
-              placeholder="Enter Chest No (e.g. 101, 103)..." 
-              class="flex-1 px-4 py-3 rounded-2xl glass-input text-xs sm:text-sm font-bold"
-            >
-            <button type="submit" class="px-6 py-3 bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs sm:text-sm rounded-2xl shadow-lg transition flex items-center gap-1.5 shrink-0">
-              <i data-lucide="search" class="w-4 h-4"></i> Search
-            </button>
-          </form>
-        </div>
-      </section>
     `;
   },
 
