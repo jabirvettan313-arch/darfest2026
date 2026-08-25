@@ -2349,17 +2349,17 @@ const app = {
                 </tr>
               </thead>
               <tbody class="divide-y">
-                ${results.length === 0 ? \`<tr><td colspan="4" class="py-4 text-center text-slate-500">No results published yet</td></tr>\` : results.map(r => \`
+                ${results.length === 0 ? `<tr><td colspan="4" class="py-4 text-center text-slate-500">No results published yet</td></tr>` : results.map(r => `
                   <tr class="hover:bg-slate-800/20 transition">
-                    <td class="py-3 px-4 font-bold text-white">\${r.programme_code} - \${this.escapeHtml(r.programme_name)}</td>
-                    <td class="py-3 px-4 text-slate-400">\${r.category_name}</td>
-                    <td class="py-3 px-4 text-amber-400 font-bold">\${r.winners && r.winners.find(w => w.position === 1) ? this.escapeHtml(r.winners.find(w => w.position === 1).student_name) : 'None'}</td>
+                    <td class="py-3 px-4 font-bold text-white">${r.programme_code} - ${this.escapeHtml(r.programme_name)}</td>
+                    <td class="py-3 px-4 text-slate-400">${r.category_name}</td>
+                    <td class="py-3 px-4 text-amber-400 font-bold">${r.winners && r.winners.find(w => w.position === 1) ? this.escapeHtml(r.winners.find(w => w.position === 1).student_name) : 'None'}</td>
                     <td class="py-3 px-4 text-right">
-                      <button onclick='app.editResult(\${JSON.stringify(r).replace(/'/g, "&#39;")})' class="p-1.5 rounded hover:bg-slate-800 text-sky-400 mr-2"><i data-lucide="edit-2" class="w-3.5 h-3.5"></i></button>
-                      <button onclick="app.deleteResult(\${r.result_id})" class="p-1.5 rounded hover:bg-slate-800 text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                      <button onclick='app.editResult(${JSON.stringify(r).replace(/'/g, "&#39;")})' class="p-1.5 rounded hover:bg-slate-800 text-sky-400 mr-2"><i data-lucide="edit-2" class="w-3.5 h-3.5"></i></button>
+                      <button onclick="app.deleteResult(${r.result_id})" class="p-1.5 rounded hover:bg-slate-800 text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                     </td>
                   </tr>
-                \`).join('')}
+                `).join('')}
               </tbody>
             </table>
           </div>
@@ -2391,7 +2391,7 @@ const app = {
 
     result.winners.forEach((w, idx) => {
         this.addWinnerRow();
-        const row = document.getElementById(`winner-row-\${idx + 1}`);
+        const row = document.getElementById(`winner-row-${idx + 1}`);
         row.querySelector('input[name="chestNo"]').value = w.chest_no;
         row.querySelector('input[name="studentName"]').value = w.student_name;
         row.querySelector('select[name="houseId"]').value = w.house_id || '';
