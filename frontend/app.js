@@ -1817,10 +1817,10 @@ const app = {
           <form onsubmit="app.submitResultDeclaration(event)" class="space-y-5 text-left">
             <div>
               <label class="block text-xs font-bold text-slate-300 uppercase mb-2">Select Event / Competition *</label>
-              <select id="resProgId" class="w-full px-4 py-3 rounded-2xl glass-input text-xs sm:text-sm font-bold bg-slate-900" required>
+              <select id="resProgId" onchange="app.autoCalculatePoints()" class="w-full px-4 py-3 rounded-2xl glass-input text-xs sm:text-sm font-bold bg-slate-900" required>
                 <option value="">-- Choose an Event --</option>
                 ${progs.map(p => `
-                  <option value="${p.id}">${p.code} — ${p.name} (${p.category_name}) [Status: ${p.status}]</option>
+                  <option value="${p.id}" data-format="${p.format}" data-category="${p.category_name}">${p.code} — ${p.name} (${p.category_name}) [Status: ${p.status}]</option>
                 `).join('')}
               </select>
             </div>
@@ -1849,7 +1849,7 @@ const app = {
                 <div class="grid grid-cols-2 gap-1.5">
                   <div>
                     <label class="text-[10px] text-slate-400 uppercase font-bold">Grade</label>
-                    <select id="w1Grade" class="w-full p-2 rounded-xl glass-input text-xs bg-slate-900 font-bold">
+                    <select id="w1Grade" onchange="app.autoCalculatePoints()" class="w-full p-2 rounded-xl glass-input text-xs bg-slate-900 font-bold">
                       <option value="A">Grade A</option>
                       <option value="B">Grade B</option>
                       <option value="C">Grade C</option>
@@ -1888,7 +1888,7 @@ const app = {
                 <div class="grid grid-cols-2 gap-1.5">
                   <div>
                     <label class="text-[10px] text-slate-400 uppercase font-bold">Grade</label>
-                    <select id="w2Grade" class="w-full p-2 rounded-xl glass-input text-xs bg-slate-900 font-bold">
+                    <select id="w2Grade" onchange="app.autoCalculatePoints()" class="w-full p-2 rounded-xl glass-input text-xs bg-slate-900 font-bold">
                       <option value="A">Grade A</option>
                       <option value="B">Grade B</option>
                       <option value="C">Grade C</option>
@@ -1927,7 +1927,7 @@ const app = {
                 <div class="grid grid-cols-2 gap-1.5">
                   <div>
                     <label class="text-[10px] text-slate-400 uppercase font-bold">Grade</label>
-                    <select id="w3Grade" class="w-full p-2 rounded-xl glass-input text-xs bg-slate-900 font-bold">
+                    <select id="w3Grade" onchange="app.autoCalculatePoints()" class="w-full p-2 rounded-xl glass-input text-xs bg-slate-900 font-bold">
                       <option value="A">Grade A</option>
                       <option value="B">Grade B</option>
                       <option value="C">Grade C</option>
@@ -1977,6 +1977,43 @@ const app = {
         if (houseEl && s.house_id) houseEl.value = s.house_id;
       }
     } catch (e) {}
+  },
+
+  autoCalculatePoints() {
+    const progSelect = document.getElementById('resProgId');
+    if (!progSelect || !progSelect.value) return;
+
+    const selectedOption = progSelect.options[progSelect.selectedIndex];
+    const format = selectedOption.getAttribute('data-format') || '';
+    const categoryName = selectedOption.getAttribute('data-category') || '';
+
+    // General category or Group format uses Group points
+    const isGroup = (format.toLowerCase() === 'group') || (categoryName.toLowerCase() === 'general');
+
+    const positions = [
+      { id: '1', indPosPts: 5, grpPosPts: 10 },
+      { id: '2', indPosPts: 3, grpPosPts: 8 },
+      { id: '3', indPosPts: 1, grpPosPts: 6 }
+    ];
+
+    const gradePoints = {
+      'A': 5,
+      'B': 3,
+      'C': 1,
+      'None': 0
+    };
+
+    positions.forEach(pos => {
+      const gradeSelect = document.getElementById(`w${pos.id}Grade`);
+      const pointsInput = document.getElementById(`w${pos.id}Points`);
+      if (gradeSelect && pointsInput) {
+        const grade = gradeSelect.value;
+        const gp = gradePoints[grade] || 0;
+        const pp = isGroup ? pos.grpPosPts : pos.indPosPts;
+        
+        pointsInput.value = pp + gp;
+      }
+    });
   },
 
   async submitResultDeclaration(e) {
