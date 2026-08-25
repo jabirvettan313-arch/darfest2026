@@ -173,7 +173,7 @@ const app = {
 
     const activeAnnouncements = this.state.announcements.filter(a => a.show_ticker == 1);
     if (activeAnnouncements.length === 0) {
-      ticker.innerHTML = `<span>✨ Welcome to ${this.state.festInfo?.settings?.fest_name || 'DARFEST 2026'}! Results are updated in real-time.</span>`;
+      ticker.innerHTML = `<span>✨ Welcome to ${this.state.festInfo?.settings?.fest_name || 'MUBARAZA'}! Results are updated in real-time.</span>`;
       return;
     }
 
@@ -254,7 +254,7 @@ const app = {
             </div>
             
             <h1 class="font-display font-black text-3xl sm:text-5xl lg:text-6xl tracking-tight text-white">
-              ${this.escapeHtml(settings.fest_name || 'DARFEST 2026')}
+              ${this.escapeHtml(settings.fest_name || 'MUBARAZA')}
             </h1>
             
             <p class="text-slate-300 text-xs sm:text-base max-w-xl font-medium leading-relaxed">
@@ -1124,8 +1124,8 @@ const app = {
     const canvas = document.getElementById('resultPosterCanvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const festName = this.state.festInfo?.settings?.fest_name || 'DARFEST 2026';
-    const festTagline = this.state.festInfo?.settings?.fest_tagline || 'Annual Arts & Cultural Festival';
+    const festName = this.state.festInfo?.settings?.fest_name || 'MUBARAZA';
+    const festTagline = this.state.festInfo?.settings?.fest_tagline || "Dars Fest '26";
 
     canvas.width = 800;
     canvas.height = 1000;
@@ -2625,11 +2625,11 @@ const app = {
           <form onsubmit="app.saveFestSettings(event)" class="space-y-3">
             <div>
               <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Festival Name</label>
-              <input id="setFestName" type="text" value="${settings.fest_name || 'DARFEST 2026'}" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-bold" required>
+              <input id="setFestName" type="text" value="${settings.fest_name || 'MUBARAZA'}" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-bold" required>
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Tagline</label>
-              <input id="setFestTagline" type="text" value="${settings.fest_tagline || 'Annual Arts & Cultural Festival'}" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-bold">
+              <input id="setFestTagline" type="text" value="${settings.fest_tagline || "Dars Fest '26"}" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-bold">
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Admin Password</label>

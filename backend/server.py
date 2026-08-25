@@ -1268,7 +1268,7 @@ def run_server(port=PORT, host=HOST):
     init_db()
     server_address = (host, port)
     httpd = ThreadedHTTPServer(server_address, ArtFestHandler)
-    print(f"🎉 DARFEST 2026 Server running at http://{host}:{port}/")
+    print(f"🎉 MUBARAZA Server running at http://{host}:{port}/")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
