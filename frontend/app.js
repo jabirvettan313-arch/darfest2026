@@ -138,6 +138,12 @@ const app = {
     } else if (hash.startsWith('#/students')) {
       this.highlightNav('students', 'text-sky-400');
       this.renderStudentsView();
+    } else if (hash.startsWith('#/appeal')) {
+      this.highlightNav('appeal', 'text-red-400');
+      this.renderAppealView();
+    } else if (hash.startsWith('#/contact')) {
+      this.highlightNav('contact', 'text-emerald-400');
+      this.renderContactView();
     } else {
       this.highlightNav('home', 'text-indigo-400');
       this.renderHomeView();
@@ -2386,6 +2392,38 @@ const app = {
       toast.classList.add('opacity-0', 'translate-y-2');
       setTimeout(() => toast.remove(), 3200);
     }, 3200);
+  },
+
+  renderAppealView() {
+    const main = document.getElementById('appMain');
+    main.innerHTML = `
+      <section class="max-w-3xl mx-auto pt-6">
+        <div class="glass-panel p-8 rounded-3xl border text-center space-y-4">
+          <div class="w-16 h-16 rounded-2xl bg-red-500/20 text-red-400 mx-auto flex items-center justify-center">
+            <i data-lucide="file-text" class="w-8 h-8"></i>
+          </div>
+          <h2 class="font-display font-black text-2xl text-white">Appeal Portal</h2>
+          <p class="text-slate-400">The appeal form will be available here soon.</p>
+        </div>
+      </section>
+    `;
+    lucide.createIcons();
+  },
+
+  renderContactView() {
+    const main = document.getElementById('appMain');
+    main.innerHTML = `
+      <section class="max-w-3xl mx-auto pt-6">
+        <div class="glass-panel p-8 rounded-3xl border text-center space-y-4">
+          <div class="w-16 h-16 rounded-2xl bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center">
+            <i data-lucide="phone" class="w-8 h-8"></i>
+          </div>
+          <h2 class="font-display font-black text-2xl text-white">Contact Us</h2>
+          <p class="text-slate-400">Contact information will be updated here soon.</p>
+        </div>
+      </section>
+    `;
+    lucide.createIcons();
   },
 
   debounce(func, wait) {
