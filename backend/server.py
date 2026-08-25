@@ -768,6 +768,7 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
 
             # POST /api/admin/programmes
             if path == '/api/admin/programmes':
+                prog_id = data.get('id')
                 code = str(data.get('code', '')).strip()
                 name = data.get('name', '').strip()
                 category_id = data.get('category_id')
@@ -789,15 +790,22 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
                     return
 
                 try:
-                    cursor.execute('''
-                        INSERT OR REPLACE INTO programmes (code, name, category_id, type, format, stage_name, scheduled_date, scheduled_time, status, first_points, second_points, third_points, grade_a_points, grade_b_points, grade_c_points)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ''', (code, name, category_id, prog_type, prog_format, stage_name, scheduled_date, scheduled_time, status, first_pts, second_pts, third_pts, grade_a, grade_b, grade_c))
-                    prog_id = cursor.lastrowid
+                    if prog_id:
+                        cursor.execute('''
+                            UPDATE programmes 
+                            SET code=?, name=?, category_id=?, type=?, format=?, stage_name=?, scheduled_date=?, scheduled_time=?, status=?, first_points=?, second_points=?, third_points=?, grade_a_points=?, grade_b_points=?, grade_c_points=?
+                            WHERE id=?
+                        ''', (code, name, category_id, prog_type, prog_format, stage_name, scheduled_date, scheduled_time, status, first_pts, second_pts, third_pts, grade_a, grade_b, grade_c, prog_id))
+                    else:
+                        cursor.execute('''
+                            INSERT INTO programmes (code, name, category_id, type, format, stage_name, scheduled_date, scheduled_time, status, first_points, second_points, third_points, grade_a_points, grade_b_points, grade_c_points)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ''', (code, name, category_id, prog_type, prog_format, stage_name, scheduled_date, scheduled_time, status, first_pts, second_pts, third_pts, grade_a, grade_b, grade_c))
+                        prog_id = cursor.lastrowid
                     conn.commit()
-                    self.send_json({"success": True, "programme_id": prog_id, "message": "Programme created successfully"})
+                    self.send_json({"success": True, "programme_id": prog_id, "message": "Programme saved successfully"})
                 except Exception as e:
-                    self.send_error_json(f"Could not create programme: {str(e)}", 400)
+                    self.send_error_json(f"Could not save programme: {str(e)}", 400)
                 return
 
             # POST /api/admin/results
@@ -902,6 +910,35 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
                 return
 
             # POST /api/admin/announcements
+            # POST /api/admin/houses
+            if path == '/api/admin/houses':
+                hid = data.get('id')
+                name = data.get('name', '').strip()
+                code = data.get('code', '').strip()
+                color = data.get('color', '#333333').strip()
+                badge_color = data.get('badge_color', 'bg-slate-500').strip()
+                bg_gradient = data.get('bg_gradient', 'from-slate-500 to-slate-900').strip()
+
+                if not name or not code:
+                    self.send_error_json("Name and code are required", 400)
+                    return
+                
+                if hid:
+                    cursor.execute('''
+                        UPDATE houses 
+                        SET name=?, code=?, color=?, badge_color=?, bg_gradient=?
+                        WHERE id=?
+                    ''', (name, code, color, badge_color, bg_gradient, hid))
+                else:
+                    cursor.execute('''
+                        INSERT INTO houses (name, code, color, badge_color, bg_gradient, icon, points)
+                        VALUES (?, ?, ?, ?, ?, ?, 0)
+                    ''', (name, code, color, badge_color, bg_gradient, 'shield'))
+                
+                conn.commit()
+                self.send_json({"success": True, "message": "House saved successfully"})
+                return
+
             if path == '/api/admin/announcements':
                 title = data.get('title', '').strip()
                 content = data.get('content', '').strip()
@@ -1094,6 +1131,15 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
                 return
 
             # DELETE /api/admin/announcements/<id>
+            # DELETE /api/admin/houses/<id>
+            match_house = re.match(r'^/api/admin/houses/(\d+)$', path)
+            if match_house:
+                house_id = int(match_house.group(1))
+                cursor.execute('DELETE FROM houses WHERE id = ?', (house_id,))
+                conn.commit()
+                self.send_json({"success": True, "message": "House deleted successfully"})
+                return
+
             match_ann = re.match(r'^/api/admin/announcements/(\d+)$', path)
             if match_ann:
                 ann_id = int(match_ann.group(1))

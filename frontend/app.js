@@ -1209,6 +1209,7 @@ const app = {
             { id: 'dashboard', label: 'Dashboard', icon: 'layout-dashboard' },
             { id: 'students', label: 'Students CRUD', icon: 'users' },
             { id: 'programmes', label: 'Programmes CRUD', icon: 'calendar' },
+            { id: 'houses', label: 'Teams (Houses)', icon: 'shield' },
             { id: 'results', label: 'Declare Results', icon: 'trophy' },
             { id: 'announcements', label: 'Announcements', icon: 'bell' },
             { id: 'settings', label: 'Fest Settings', icon: 'settings' }
@@ -1309,6 +1310,8 @@ const app = {
       await this.renderAdminStudents(container);
     } else if (this.state.activeAdminTab === 'programmes') {
       await this.renderAdminProgrammes(container);
+    } else if (this.state.activeAdminTab === 'houses') {
+      await this.renderAdminHouses(container);
     } else if (this.state.activeAdminTab === 'results') {
       await this.renderAdminResults(container);
     } else if (this.state.activeAdminTab === 'announcements') {
@@ -1606,6 +1609,182 @@ const app = {
   },
 
   // ---------------- ADMIN PROGRAMMES TAB ----------------
+  // ---------------- ADMIN HOUSES TAB ----------------
+  async renderAdminHouses(container) {
+    let houses = [];
+    try {
+      const res = await fetch(`${API_BASE}/houses`).then(r => r.json());
+      if (res.success) houses = res.houses;
+    } catch (e) {}
+
+    container.innerHTML = `
+      <div class="space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 class="font-display font-black text-xl text-white">Team / House Management</h2>
+            <p class="text-xs text-slate-400">${houses.length} houses configured</p>
+          </div>
+          <button onclick="app.openAddHouseModal()" class="px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-lg">
+            <i data-lucide="plus" class="w-4 h-4"></i> Add House
+          </button>
+        </div>
+
+        <div class="glass-panel rounded-3xl overflow-hidden border">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="text-slate-400 uppercase border-b">
+                <tr>
+                  <th class="py-3 px-4">Code</th>
+                  <th class="py-3 px-4">House Name</th>
+                  <th class="py-3 px-4">Color</th>
+                  <th class="py-3 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y">
+                ${houses.map(h => `
+                  <tr class="hover:bg-slate-800/20 transition">
+                    <td class="py-3 px-4 font-mono font-bold" style="color: ${h.color}">${h.code}</td>
+                    <td class="py-3 px-4 font-bold text-white">${this.escapeHtml(h.name)}</td>
+                    <td class="py-3 px-4">
+                      <div class="flex items-center gap-2">
+                        <div class="w-4 h-4 rounded-full" style="background-color: ${h.color}"></div>
+                        <span class="text-slate-300 font-mono">${h.color}</span>
+                      </div>
+                    </td>
+                    <td class="py-3 px-4 text-right">
+                      <button onclick='app.openEditProgrammeModal(${JSON.stringify(p).replace(/'/g, "&#39;")})' class="p-1.5 rounded hover:bg-slate-800 text-sky-400 mr-2">
+                        <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
+                      </button>
+                      <button onclick="app.deleteProgramme(${p.id})" class="p-1.5 rounded hover:bg-slate-800 text-slate-400 hover:text-red-400">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                      </button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div id="houseFormModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4"></div>
+    `;
+    lucide.createIcons();
+  },
+
+  openAddHouseModal() {
+    this.renderHouseModal({});
+  },
+
+  openEditHouseModal(house) {
+    this.renderHouseModal(house);
+  },
+
+  renderHouseModal(house) {
+    const modal = document.getElementById('houseFormModal');
+    if (!modal) return;
+    const isEdit = !!house.id;
+
+    modal.innerHTML = `
+      <div class="bg-slate-900 border border-slate-700/50 p-6 rounded-3xl w-full max-w-md shadow-2xl relative">
+        <div class="flex items-center justify-between border-b pb-3 mb-4">
+          <h3 class="font-display font-bold text-lg text-white">${isEdit ? 'Edit House' : 'Add New House'}</h3>
+          <button onclick="app.closeHouseModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+
+        <form onsubmit="app.saveHouse(event, ${house.id || 'null'})" class="space-y-4 text-left">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Code *</label>
+              <input id="hsCode" type="text" placeholder="e.g. RR" value="${house.code || ''}" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-mono font-bold" required>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Color (Hex) *</label>
+              <input id="hsColor" type="text" placeholder="#FF0000" value="${house.color || ''}" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-mono font-bold" required>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-300 uppercase mb-1">House Name *</label>
+            <input id="hsName" type="text" value="${house.name || ''}" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-bold" required>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Badge Color (Tailwind) *</label>
+              <input id="hsBadge" type="text" value="${house.badge_color || 'bg-slate-500'}" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-mono font-bold" required>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Gradient (Tailwind) *</label>
+              <input id="hsGrad" type="text" value="${house.bg_gradient || 'from-slate-500 to-slate-900'}" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-mono font-bold" required>
+            </div>
+          </div>
+
+          <div class="pt-2 flex justify-end gap-2">
+            <button type="button" onclick="app.closeHouseModal()" class="px-4 py-2 rounded-xl glass-card text-xs font-bold">Cancel</button>
+            <button type="submit" class="px-5 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black">
+              ${isEdit ? 'Update House' : 'Save House'}
+            </button>
+          </div>
+        </form>
+      </div>
+    `;
+    modal.classList.remove('hidden');
+    lucide.createIcons();
+  },
+
+  closeHouseModal() {
+    const modal = document.getElementById('houseFormModal');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  async saveHouse(e, id) {
+    e.preventDefault();
+    const payload = {
+      name: document.getElementById('hsName').value.trim(),
+      code: document.getElementById('hsCode').value.trim(),
+      color: document.getElementById('hsColor').value.trim(),
+      badge_color: document.getElementById('hsBadge').value.trim(),
+      bg_gradient: document.getElementById('hsGrad').value.trim()
+    };
+    if (id) payload.id = id;
+
+    try {
+      const res = await fetch(`${API_BASE}/admin/houses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Pin': this.state.adminToken },
+        body: JSON.stringify(payload)
+      }).then(r => r.json());
+
+      if (res.success) {
+        this.showToast(id ? 'House updated' : 'House added', 'success');
+        this.closeHouseModal();
+        await this.fetchInitialData();
+        this.renderAdminTabContent();
+      } else {
+        this.showToast(res.error || 'Failed to save', 'error');
+      }
+    } catch (e) {
+      this.showToast('Failed to save house', 'error');
+    }
+  },
+
+  async deleteHouse(id) {
+    if (!confirm('Delete this House? This might affect existing students and results.')) return;
+    try {
+      const res = await fetch(`${API_BASE}/admin/houses/${id}`, {
+        method: 'DELETE',
+        headers: { 'X-Admin-Pin': this.state.adminToken }
+      }).then(r => r.json());
+
+      if (res.success) {
+        this.showToast('House deleted', 'success');
+        await this.fetchInitialData();
+        this.renderAdminTabContent();
+      } else {
+        this.showToast('Delete failed', 'error');
+      }
+    } catch (e) {
+      this.showToast('Delete failed', 'error');
+    }
+  },
   async renderAdminProgrammes(container) {
     let progs = [];
     try {
@@ -1649,6 +1828,9 @@ const app = {
                       </span>
                     </td>
                     <td class="py-3 px-4 text-right">
+                      <button onclick='app.openEditProgrammeModal(${JSON.stringify(p).replace(/'/g, "&#39;")})' class="p-1.5 rounded hover:bg-slate-800 text-sky-400 mr-2">
+                        <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
+                      </button>
                       <button onclick="app.deleteProgramme(${p.id})" class="p-1.5 rounded hover:bg-slate-800 text-slate-400 hover:text-red-400">
                         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                       </button>
@@ -1665,25 +1847,34 @@ const app = {
   },
 
   openAddProgrammeModal() {
+    this.renderProgrammeModal({});
+  },
+
+  openEditProgrammeModal(prog) {
+    this.renderProgrammeModal(prog);
+  },
+
+  renderProgrammeModal(prog) {
     const modal = document.getElementById('programmeFormModal');
     if (!modal) return;
+    const isEdit = !!prog.id;
 
     modal.innerHTML = `
       <div class="glass-panel max-w-lg w-full rounded-3xl overflow-hidden shadow-2xl border p-6 space-y-4">
         <div class="flex items-center justify-between border-b pb-3">
-          <h3 class="font-display font-bold text-lg text-white">Add New Programme</h3>
+          <h3 class="font-display font-bold text-lg text-white">${isEdit ? 'Edit Programme' : 'Add New Programme'}</h3>
           <button onclick="app.closeProgrammeModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
         </div>
 
-        <form onsubmit="app.saveProgramme(event)" class="space-y-4 text-left">
+        <form onsubmit="app.saveProgramme(event, ${prog.id || 'null'})" class="space-y-4 text-left">
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Code *</label>
-              <input id="prCode" type="text" placeholder="e.g. PRG-109" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-mono font-bold" required>
+              <input id="prCode" type="text" placeholder="e.g. PRG-109" value="${prog.code || ''}" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-mono font-bold" required>
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Event Name *</label>
-              <input id="prName" type="text" placeholder="e.g. Group Song" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-bold" required>
+              <input id="prName" type="text" placeholder="e.g. Group Song" value="${prog.name || ''}" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-bold" required>
             </div>
           </div>
 
@@ -1691,14 +1882,24 @@ const app = {
             <div>
               <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Category *</label>
               <select id="prCatId" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-bold bg-slate-900">
-                ${this.state.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+                ${this.state.categories.map(c => `<option value="${c.id}" ${c.id === prog.category_id ? 'selected' : ''}>${c.name}</option>`).join('')}
               </select>
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Type</label>
               <select id="prType" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-bold bg-slate-900">
-                <option value="On-Stage">On-Stage</option>
-                <option value="Off-Stage">Off-Stage</option>
+                <option value="On-Stage" ${prog.type === 'On-Stage' ? 'selected' : ''}>On-Stage</option>
+                <option value="Off-Stage" ${prog.type === 'Off-Stage' ? 'selected' : ''}>Off-Stage</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Format</label>
+              <select id="prFormat" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-bold bg-slate-900">
+                <option value="Solo" ${prog.format === 'Solo' ? 'selected' : ''}>Solo</option>
+                <option value="Group" ${prog.format === 'Group' ? 'selected' : ''}>Group</option>
               </select>
             </div>
           </div>
@@ -1706,17 +1907,19 @@ const app = {
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Stage</label>
-              <input id="prStage" type="text" placeholder="Stage 1" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs">
+              <input id="prStage" type="text" placeholder="Stage 1" value="${prog.stage_name || ''}" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs">
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Time</label>
-              <input id="prTime" type="text" placeholder="03:00 PM" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs">
+              <input id="prTime" type="text" placeholder="03:00 PM" value="${prog.scheduled_time || ''}" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs">
             </div>
           </div>
 
           <div class="pt-2 flex justify-end gap-2">
             <button type="button" onclick="app.closeProgrammeModal()" class="px-4 py-2 rounded-xl glass-card text-xs font-bold">Cancel</button>
-            <button type="submit" class="px-5 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black">Save</button>
+            <button type="submit" class="px-5 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black">
+              ${isEdit ? 'Update Event' : 'Save Event'}
+            </button>
           </div>
         </form>
       </div>
@@ -1730,16 +1933,18 @@ const app = {
     if (modal) modal.classList.add('hidden');
   },
 
-  async saveProgramme(e) {
+  async saveProgramme(e, id) {
     e.preventDefault();
     const payload = {
       code: document.getElementById('prCode').value.trim(),
       name: document.getElementById('prName').value.trim(),
       category_id: parseInt(document.getElementById('prCatId').value),
       type: document.getElementById('prType').value,
+      format: document.getElementById('prFormat')?.value || 'Solo',
       stage_name: document.getElementById('prStage').value.trim(),
       scheduled_time: document.getElementById('prTime').value.trim()
     };
+    if (id) payload.id = id;
 
     try {
       const res = await fetch(`${API_BASE}/admin/programmes`, {
@@ -1749,13 +1954,16 @@ const app = {
       }).then(r => r.json());
 
       if (res.success) {
-        this.showToast('Programme added', 'success');
+        this.showToast(id ? 'Programme updated' : 'Programme added', 'success');
         this.closeProgrammeModal();
         this.renderAdminTabContent();
+      } else {
+        this.showToast(res.error || 'Failed to save', 'error');
       }
     } catch (e) {
-      this.showToast('Failed to add programme', 'error');
+      this.showToast('Failed to save programme', 'error');
     }
+  },
   },
 
   async deleteProgramme(id) {
