@@ -2310,7 +2310,7 @@ const app = {
     try {
       const [pRes, rRes, sRes] = await Promise.all([
         fetch(`${API_BASE}/programmes`).then(r => r.json()),
-        fetch(`${API_BASE}/results`).then(r => r.json()),
+        fetch(`${API_BASE}/results?include_unpublished=true`).then(r => r.json()),
         fetch(`${API_BASE}/students`).then(r => r.json())
       ]);
       if (pRes.success) progs = pRes.programmes;
