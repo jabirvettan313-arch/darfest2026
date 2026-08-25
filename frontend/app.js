@@ -1308,7 +1308,7 @@ const app = {
                 { id: 'dashboard', label: 'Dashboard', icon: 'layout-dashboard' },
                 { id: 'students', label: 'Students', icon: 'users' },
                 { id: 'programmes', label: 'Events', icon: 'calendar' },
-                { id: 'houses', label: 'Houses', icon: 'shield' },
+                { id: 'teams', label: 'Teams', icon: 'shield' },
                 { id: 'results', label: 'Results', icon: 'trophy' },
                 { id: 'announcements', label: 'Announcements', icon: 'bell' },
                 { id: 'settings', label: 'Settings', icon: 'settings' }
@@ -1454,7 +1454,7 @@ const app = {
       await this.renderAdminStudents(container);
     } else if (this.state.activeAdminTab === 'programmes') {
       await this.renderAdminProgrammes(container);
-    } else if (this.state.activeAdminTab === 'houses') {
+    } else if (this.state.activeAdminTab === 'teams' || this.state.activeAdminTab === 'houses') {
       await this.renderAdminHouses(container);
     } else if (this.state.activeAdminTab === 'results') {
       await this.renderAdminResults(container);
@@ -1824,11 +1824,11 @@ const app = {
       <div class="space-y-6">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 class="font-display font-black text-xl text-white">Team / House Management</h2>
-            <p class="text-xs text-slate-400">${houses.length} houses configured</p>
+            <h2 class="font-display font-black text-xl text-white">Team Management</h2>
+            <p class="text-xs text-slate-400">${houses.length} teams configured</p>
           </div>
           <button onclick="app.openAddHouseModal()" class="px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-lg">
-            <i data-lucide="plus" class="w-4 h-4"></i> Add House
+            <i data-lucide="plus" class="w-4 h-4"></i> Add Team
           </button>
         </div>
         <div class="relative w-full mb-4 mt-6">
@@ -1859,10 +1859,10 @@ const app = {
                       </div>
                     </td>
                     <td class="py-3 px-4 text-right">
-                      <button onclick='app.openEditProgrammeModal(${JSON.stringify(p).replace(/'/g, "&#39;")})' class="p-1.5 rounded hover:bg-slate-800 text-sky-400 mr-2">
+                      <button onclick='app.openEditHouseModal(${JSON.stringify(h).replace(/'/g, "&#39;")})' class="p-1.5 rounded hover:bg-slate-800 text-sky-400 mr-2">
                         <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
                       </button>
-                      <button onclick="app.deleteProgramme(${p.id})" class="p-1.5 rounded hover:bg-slate-800 text-slate-400 hover:text-red-400">
+                      <button onclick="app.deleteHouse(${h.id})" class="p-1.5 rounded hover:bg-slate-800 text-slate-400 hover:text-red-400">
                         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                       </button>
                     </td>
@@ -1894,7 +1894,7 @@ const app = {
     modal.innerHTML = `
       <div class="bg-slate-900 border border-slate-700/50 p-6 rounded-3xl w-full max-w-md shadow-2xl relative">
         <div class="flex items-center justify-between border-b pb-3 mb-4">
-          <h3 class="font-display font-bold text-lg text-white">${isEdit ? 'Edit House' : 'Add New House'}</h3>
+          <h3 class="font-display font-bold text-lg text-white">${isEdit ? 'Edit Team' : 'Add New Team'}</h3>
           <button onclick="app.closeHouseModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
         </div>
 
@@ -1927,7 +1927,7 @@ const app = {
           <div class="pt-2 flex justify-end gap-2">
             <button type="button" onclick="app.closeHouseModal()" class="px-4 py-2 rounded-xl glass-card text-xs font-bold">Cancel</button>
             <button type="submit" class="px-5 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black">
-              ${isEdit ? 'Update House' : 'Save House'}
+              ${isEdit ? 'Update Team' : 'Save Team'}
             </button>
           </div>
         </form>
@@ -1961,7 +1961,7 @@ const app = {
       }).then(r => r.json());
 
       if (res.success) {
-        this.showToast(id ? 'House updated' : 'House added', 'success');
+        this.showToast(id ? 'Team updated' : 'Team added', 'success');
         this.closeHouseModal();
         await this.fetchInitialData();
         this.renderAdminTabContent();
@@ -1969,12 +1969,12 @@ const app = {
         this.showToast(res.error || 'Failed to save', 'error');
       }
     } catch (e) {
-      this.showToast('Failed to save house', 'error');
+      this.showToast('Failed to save team', 'error');
     }
   },
 
   async deleteHouse(id) {
-    if (!confirm('Delete this House? This might affect existing students and results.')) return;
+    if (!confirm('Delete this Team? This might affect existing students and results.')) return;
     try {
       const res = await fetch(`${API_BASE}/admin/houses/${id}`, {
         method: 'DELETE',
@@ -1982,7 +1982,7 @@ const app = {
       }).then(r => r.json());
 
       if (res.success) {
-        this.showToast('House deleted', 'success');
+        this.showToast('Team deleted', 'success');
         await this.fetchInitialData();
         this.renderAdminTabContent();
       } else {
