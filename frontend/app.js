@@ -1822,48 +1822,65 @@ const app = {
 
     container.innerHTML = `
       <div class="space-y-6">
+        <!-- Header -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 class="font-display font-black text-xl text-white">Team Management</h2>
-            <p class="text-xs text-slate-400">${houses.length} teams configured</p>
+            <h2 class="font-display font-black text-xl text-white flex items-center gap-2">
+              <i data-lucide="shield" class="w-5 h-5 text-indigo-400"></i> Team Management
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">${houses.length} teams configured</p>
           </div>
-          <button onclick="app.openAddHouseModal()" class="px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-lg">
-            <i data-lucide="plus" class="w-4 h-4"></i> Add Team
+          <button onclick="app.openAddHouseModal()" class="px-5 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition flex items-center gap-2 shadow-lg shadow-indigo-600/30">
+            <i data-lucide="plus" class="w-4 h-4"></i> Add New Team
           </button>
         </div>
-        <div class="relative w-full mb-4 mt-6">
+
+        <!-- Search -->
+        <div class="relative w-full">
           <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-          <input type="text" id="houseSearch" onkeyup="app.filterAdminTable('houseSearch', 'houseTable')" placeholder="Search houses by name, code..." class="w-full pl-10 pr-4 py-3 rounded-2xl glass-input text-sm font-bold">
+          <input type="text" id="houseSearch" onkeyup="app.filterAdminTable('houseSearch', 'houseTable')" placeholder="Search teams by name or code..." class="w-full pl-10 pr-4 py-3 rounded-2xl glass-input text-sm font-bold">
         </div>
 
+        <!-- Teams Table -->
         <div class="glass-panel rounded-3xl overflow-hidden border">
           <div class="overflow-x-auto">
             <table id="houseTable" class="w-full text-left text-xs">
-              <thead class="text-slate-400 uppercase border-b">
+              <thead class="text-slate-400 uppercase border-b border-slate-700/50">
                 <tr>
-                  <th class="py-3 px-4">Code</th>
-                  <th class="py-3 px-4">House Name</th>
-                  <th class="py-3 px-4">Color</th>
-                  <th class="py-3 px-4 text-right">Actions</th>
+                  <th class="py-4 px-5">Team</th>
+                  <th class="py-4 px-5">Code</th>
+                  <th class="py-4 px-5">Color</th>
+                  <th class="py-4 px-5">Points</th>
+                  <th class="py-4 px-5 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody class="divide-y">
-                ${houses.map(h => `
-                  <tr class="hover:bg-slate-800/20 transition">
-                    <td class="py-3 px-4 font-mono font-bold" style="color: ${h.color}">${h.code}</td>
-                    <td class="py-3 px-4 font-bold text-white">${this.escapeHtml(h.name)}</td>
-                    <td class="py-3 px-4">
-                      <div class="flex items-center gap-2">
-                        <div class="w-4 h-4 rounded-full" style="background-color: ${h.color}"></div>
-                        <span class="text-slate-300 font-mono">${h.color}</span>
+              <tbody class="divide-y divide-slate-700/30">
+                ${houses.length === 0 ? `
+                  <tr><td colspan="5" class="py-12 text-center text-slate-400 font-semibold">No teams yet. Click "Add New Team" to get started.</td></tr>
+                ` : houses.map(h => `
+                  <tr class="hover:bg-slate-800/30 transition">
+                    <td class="py-4 px-5">
+                      <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm" style="background-color:${h.color}22; color:${h.color}; border:1px solid ${h.color}55">${(h.code||'?').substring(0,2)}</div>
+                        <span class="font-bold text-white">${this.escapeHtml(h.name)}</span>
                       </div>
                     </td>
-                    <td class="py-3 px-4 text-right">
-                      <button onclick='app.openEditHouseModal(${JSON.stringify(h).replace(/'/g, "&#39;")})' class="p-1.5 rounded hover:bg-slate-800 text-sky-400 mr-2">
-                        <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
+                    <td class="py-4 px-5 font-mono font-bold" style="color:${h.color}">${h.code}</td>
+                    <td class="py-4 px-5">
+                      <div class="flex items-center gap-2">
+                        <div class="w-5 h-5 rounded-lg" style="background-color:${h.color}; border:1px solid ${h.color}88"></div>
+                        <span class="text-slate-300 font-mono text-[11px]">${h.color}</span>
+                      </div>
+                    </td>
+                    <td class="py-4 px-5">
+                      <span class="px-2.5 py-1 rounded-xl font-black text-sm" style="background-color:${h.color}22; color:${h.color}">${h.points || 0} pts</span>
+                    </td>
+                    <td class="py-4 px-5 text-right">
+                      <button onclick='app.openEditHouseModal(${JSON.stringify(h).replace(/'/g, "&#39;")})' class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 text-xs font-bold mr-2 transition">
+                        <i data-lucide="edit-2" class="w-3 h-3"></i> Edit
                       </button>
-                      <button onclick="app.deleteHouse(${h.id})" class="p-1.5 rounded hover:bg-slate-800 text-slate-400 hover:text-red-400">
-                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                      <button onclick="app.deleteHouse(${h.id})" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold transition">
+                        <i data-lucide="trash-2" class="w-3 h-3"></i> Delete
                       </button>
                     </td>
                   </tr>
@@ -1873,6 +1890,8 @@ const app = {
           </div>
         </div>
       </div>
+
+      <!-- Modal -->
       <div id="houseFormModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4"></div>
     `;
     lucide.createIcons();
@@ -1892,42 +1911,72 @@ const app = {
     const isEdit = !!house.id;
 
     modal.innerHTML = `
-      <div class="bg-slate-900 border border-slate-700/50 p-6 rounded-3xl w-full max-w-md shadow-2xl relative">
-        <div class="flex items-center justify-between border-b pb-3 mb-4">
-          <h3 class="font-display font-bold text-lg text-white">${isEdit ? 'Edit Team' : 'Add New Team'}</h3>
-          <button onclick="app.closeHouseModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      <div class="bg-slate-900 border border-slate-700/50 p-6 rounded-3xl w-full max-w-md shadow-2xl">
+        <div class="flex items-center justify-between mb-5">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+              <i data-lucide="${isEdit ? 'edit-2' : 'plus'}" class="w-4 h-4 text-indigo-400"></i>
+            </div>
+            <h3 class="font-display font-bold text-lg text-white">${isEdit ? 'Edit Team' : 'Add New Team'}</h3>
+          </div>
+          <button onclick="app.closeHouseModal()" class="p-2 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
         </div>
 
-        <form onsubmit="app.saveHouse(event, ${house.id || 'null'})" class="space-y-4 text-left">
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Code *</label>
-              <input id="hsCode" type="text" placeholder="e.g. RR" value="${house.code || ''}" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-mono font-bold" required>
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Color (Hex) *</label>
-              <input id="hsColor" type="text" placeholder="#FF0000" value="${house.color || ''}" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-mono font-bold" required>
-            </div>
-          </div>
+        <form onsubmit="app.saveHouse(event, ${house.id || 'null'})" class="space-y-4">
           <div>
-            <label class="block text-xs font-bold text-slate-300 uppercase mb-1">House Name *</label>
-            <input id="hsName" type="text" value="${house.name || ''}" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-bold" required>
+            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Team Name *</label>
+            <input id="hsName" type="text" placeholder="e.g. Ruby Royals" value="${this.escapeHtml(house.name || '')}"
+              class="w-full px-4 py-3 rounded-2xl glass-input text-sm font-bold" required>
           </div>
+
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Badge Color (Tailwind) *</label>
-              <input id="hsBadge" type="text" value="${house.badge_color || 'bg-slate-500'}" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-mono font-bold" required>
+              <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Short Code *</label>
+              <input id="hsCode" type="text" placeholder="e.g. RR" maxlength="4" value="${this.escapeHtml(house.code || '')}"
+                class="w-full px-4 py-3 rounded-2xl glass-input text-sm font-mono font-bold" required>
             </div>
             <div>
-              <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Gradient (Tailwind) *</label>
-              <input id="hsGrad" type="text" value="${house.bg_gradient || 'from-slate-500 to-slate-900'}" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-mono font-bold" required>
+              <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Team Color *</label>
+              <div class="flex gap-2">
+                <input id="hsColorPicker" type="color" value="${house.color || '#6366f1'}"
+                  oninput="document.getElementById('hsColor').value=this.value"
+                  class="w-11 h-11 rounded-xl border border-slate-700 bg-transparent cursor-pointer p-0.5 flex-shrink-0">
+                <input id="hsColor" type="text" placeholder="#6366f1" value="${house.color || '#6366f1'}"
+                  oninput="document.getElementById('hsColorPicker').value=this.value"
+                  class="flex-1 min-w-0 px-3 py-3 rounded-2xl glass-input text-xs font-mono font-bold" required>
+              </div>
             </div>
           </div>
 
-          <div class="pt-2 flex justify-end gap-2">
-            <button type="button" onclick="app.closeHouseModal()" class="px-4 py-2 rounded-xl glass-card text-xs font-bold">Cancel</button>
-            <button type="submit" class="px-5 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black">
-              ${isEdit ? 'Update Team' : 'Save Team'}
+          <details class="rounded-2xl border border-slate-700/40 overflow-hidden">
+            <summary class="px-4 py-3 text-xs font-bold text-slate-400 cursor-pointer hover:text-slate-200 transition select-none">
+              Advanced Options (Badge &amp; Gradient)
+            </summary>
+            <div class="px-4 pb-4 pt-2 space-y-3 border-t border-slate-700/40">
+              <div>
+                <label class="block text-xs font-bold text-slate-300 uppercase mb-1.5">Badge Color Class</label>
+                <input id="hsBadge" type="text" placeholder="bg-indigo-500" value="${house.badge_color || 'bg-indigo-500'}"
+                  class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-mono font-bold">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-300 uppercase mb-1.5">BG Gradient Class</label>
+                <input id="hsGrad" type="text" placeholder="from-indigo-500 to-slate-900" value="${house.bg_gradient || 'from-indigo-500 to-slate-900'}"
+                  class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-mono font-bold">
+              </div>
+            </div>
+          </details>
+
+          <div class="flex gap-3 pt-1">
+            <button type="button" onclick="app.closeHouseModal()"
+              class="flex-1 py-3 rounded-2xl border border-slate-700 text-slate-300 hover:text-white text-xs font-bold transition">
+              Cancel
+            </button>
+            <button type="submit" id="hsSaveBtn"
+              class="flex-1 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black transition shadow-lg flex items-center justify-center gap-2">
+              <i data-lucide="${isEdit ? 'check' : 'plus'}" class="w-4 h-4"></i>
+              ${isEdit ? 'Update Team' : 'Add Team'}
             </button>
           </div>
         </form>
@@ -1946,12 +1995,15 @@ const app = {
     e.preventDefault();
     const payload = {
       name: document.getElementById('hsName').value.trim(),
-      code: document.getElementById('hsCode').value.trim(),
+      code: document.getElementById('hsCode').value.trim().toUpperCase(),
       color: document.getElementById('hsColor').value.trim(),
-      badge_color: document.getElementById('hsBadge').value.trim(),
-      bg_gradient: document.getElementById('hsGrad').value.trim()
+      badge_color: (document.getElementById('hsBadge').value.trim()) || 'bg-indigo-500',
+      bg_gradient: (document.getElementById('hsGrad').value.trim()) || 'from-indigo-500 to-slate-900'
     };
     if (id) payload.id = id;
+
+    const btn = document.getElementById('hsSaveBtn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin inline mr-1"></i> Saving...'; lucide.createIcons(); }
 
     try {
       const res = await fetch(`${API_BASE}/admin/houses`, {
@@ -1961,20 +2013,22 @@ const app = {
       }).then(r => r.json());
 
       if (res.success) {
-        this.showToast(id ? 'Team updated' : 'Team added', 'success');
+        this.showToast(id ? '✅ Team updated!' : '✅ Team added!', 'success');
         this.closeHouseModal();
         await this.fetchInitialData();
         this.renderAdminTabContent();
       } else {
         this.showToast(res.error || 'Failed to save', 'error');
+        if (btn) { btn.disabled = false; btn.innerHTML = id ? 'Update Team' : 'Add Team'; }
       }
-    } catch (e) {
-      this.showToast('Failed to save team', 'error');
+    } catch (err) {
+      this.showToast('Network error. Try again.', 'error');
+      if (btn) { btn.disabled = false; btn.innerHTML = id ? 'Update Team' : 'Add Team'; }
     }
   },
 
   async deleteHouse(id) {
-    if (!confirm('Delete this Team? This might affect existing students and results.')) return;
+    if (!confirm('Delete this team? Students in this team may be affected.')) return;
     try {
       const res = await fetch(`${API_BASE}/admin/houses/${id}`, {
         method: 'DELETE',
@@ -1982,11 +2036,11 @@ const app = {
       }).then(r => r.json());
 
       if (res.success) {
-        this.showToast('Team deleted', 'success');
+        this.showToast('🗑️ Team deleted', 'success');
         await this.fetchInitialData();
         this.renderAdminTabContent();
       } else {
-        this.showToast('Delete failed', 'error');
+        this.showToast(res.error || 'Delete failed', 'error');
       }
     } catch (e) {
       this.showToast('Delete failed', 'error');
