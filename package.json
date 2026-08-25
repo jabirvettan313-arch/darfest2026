@@ -1,0 +1,13 @@
+{
+  "name": "darfest2026",
+  "version": "1.0.0",
+  "description": "DarFest 2026 Result Platform with Telegram Integration",
+  "main": "server.js",
+  "scripts": {
+    "start": "python3 backend/server.py",
+    "build": "echo 'Build complete'"
+  },
+  "keywords": ["artfest", "darfest", "telegram-bot"],
+  "author": "Jabir Vettan",
+  "license": "ISC"
+}
