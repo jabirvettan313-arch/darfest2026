@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "python3 backend/server.py",
+    "npmstart": "python3 backend/server.py",
     "build": "echo 'Build complete'"
   },
   "keywords": ["artfest", "darfest", "telegram-bot"],
