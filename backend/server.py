@@ -937,7 +937,7 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
                         prog_data = dict(prog_row)
                         bot_token = self.get_setting('telegram_bot_token', '')
                         chat_id = self.get_setting('telegram_chat_id', '')
-                        fest_name = self.get_setting('fest_name', 'DARFEST 2026')
+                        fest_name = self.get_setting('fest_name', 'MUBARAZA')
                         hashtag = self.get_setting('telegram_hashtag', '#DarFest2026')
 
                         if bot_token and chat_id:
@@ -1011,7 +1011,7 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
                 if send_tg:
                     bot_token = self.get_setting('telegram_bot_token', '')
                     chat_id = self.get_setting('telegram_chat_id', '')
-                    fest_name = self.get_setting('fest_name', 'DARFEST 2026')
+                    fest_name = self.get_setting('fest_name', 'MUBARAZA')
                     hashtag = self.get_setting('telegram_hashtag', '#DarFest2026')
 
                     if bot_token and chat_id:

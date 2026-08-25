@@ -6,9 +6,9 @@ services:
     startCommand: python3 backend/server.py
     envVars:
       - key: FEST_NAME
-        value: DARFEST 2026
+        value: MUBARAZA
       - key: FEST_TAGLINE
-        value: Annual Arts & Cultural Festival
+        value: Dars Fest '26
       - key: ADMIN_PASSWORD
         value: jabirv 321
       - key: ADMIN_PIN

@@ -95,8 +95,8 @@ const app = {
 
   updateFestHeader(settings) {
     if (!settings) return;
-    const festName = settings.fest_name || 'DARFEST 2026';
-    const festTagline = settings.fest_tagline || 'Annual Arts & Cultural Festival';
+    const festName = settings.fest_name || 'MUBARAZA';
+    const festTagline = settings.fest_tagline || "Dars Fest '26";
 
     document.title = `${festName} — Live Results & Overall Standings`;
     const navName = document.getElementById('navFestName');

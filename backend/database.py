@@ -180,8 +180,8 @@ def init_db():
 def sync_env_to_settings(cursor, conn):
     """Syncs environment variables into the settings table."""
     env_mappings = {
-        'fest_name': os.environ.get('FEST_NAME', 'DARFEST 2026'),
-        'fest_tagline': os.environ.get('FEST_TAGLINE', 'Annual Arts & Cultural Festival'),
+        'fest_name': os.environ.get('FEST_NAME', 'MUBARAZA'),
+        'fest_tagline': os.environ.get('FEST_TAGLINE', "Dars Fest '26"),
         'fest_date': os.environ.get('FEST_DATE', 'August 25 - 28, 2026'),
         'admin_pin': os.environ.get('ADMIN_PIN', '321'),
         'admin_pass': os.environ.get('ADMIN_PASSWORD', 'jabirv 321'),
