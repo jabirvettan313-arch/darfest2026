@@ -1274,18 +1274,19 @@ const app = {
     main.innerHTML = `
       <div class="max-w-7xl mx-auto py-4 sm:py-6 flex flex-col lg:flex-row gap-4 sm:gap-6">
         <!-- Sidebar Navigation -->
-        <div class="w-full lg:w-[280px] flex-shrink-0">
+        <div class="w-full lg:w-72 flex-shrink-0">
           <div class="glass-panel p-4 sm:p-5 rounded-3xl border shadow-xl lg:sticky lg:top-24">
             
-            <!-- Mobile header & controls -->
             <div class="flex items-center justify-between lg:mb-6 lg:pb-5 lg:border-b border-slate-700/50 mb-4">
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
                   <i data-lucide="shield-check" class="w-5 h-5"></i>
                 </div>
                 <div>
-                  <div class="font-display font-black text-white leading-tight text-sm sm:text-base">Admin Panel</div>
-                  <div class="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full inline-block mt-0.5">Logged In</div>
+                  <div class="font-display font-black text-white leading-tight text-sm sm:text-base">Admin Hub</div>
+                  <div class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1 mt-0.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Authorized
+                  </div>
                 </div>
               </div>
               
@@ -1300,42 +1301,32 @@ const app = {
               </div>
             </div>
 
-            <p class="hidden lg:block text-xs text-slate-400 mb-4 font-semibold">Select a section to manage:</p>
-
             <!-- Tabs: Horizontal Scroll on Mobile, Vertical on Desktop -->
-            <div class="flex flex-row lg:flex-col gap-2 overflow-x-auto pb-2 lg:pb-0" style="scrollbar-width: none; -ms-overflow-style: none;">
+            <div class="flex flex-row lg:flex-col gap-1.5 overflow-x-auto pb-2 lg:pb-0" style="scrollbar-width: none; -ms-overflow-style: none;">
               <style> .overflow-x-auto::-webkit-scrollbar { display: none; } </style>
               ${[
-                { id: 'dashboard', label: 'Dashboard', sub: 'Overview & Stats', icon: 'layout-dashboard' },
-                { id: 'students', label: 'Students', sub: 'Add/Edit participants', icon: 'users' },
-                { id: 'programmes', label: 'Events', sub: 'Manage competitions', icon: 'calendar' },
-                { id: 'teams', label: 'Teams', sub: 'Houses & Points', icon: 'shield' },
-                { id: 'results', label: 'Results', sub: 'Publish winners', icon: 'trophy' },
-                { id: 'announcements', label: 'Notices', sub: 'Live alerts', icon: 'bell' },
-                { id: 'settings', label: 'Settings', sub: 'Fest configuration', icon: 'settings' }
+                { id: 'dashboard', label: 'Dashboard', icon: 'layout-dashboard' },
+                { id: 'students', label: 'Students', icon: 'users' },
+                { id: 'programmes', label: 'Events', icon: 'calendar' },
+                { id: 'teams', label: 'Teams', icon: 'shield' },
+                { id: 'results', label: 'Results', icon: 'trophy' },
+                { id: 'announcements', label: 'Announcements', icon: 'bell' },
+                { id: 'settings', label: 'Settings', icon: 'settings' }
               ].map(t => `
-                <button onclick="app.setAdminTab('${t.id}')" class="group relative whitespace-nowrap flex-shrink-0 lg:w-full text-left px-3 sm:px-4 py-2.5 sm:py-3 rounded-2xl transition flex items-center gap-3 ${this.state.activeAdminTab === t.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-slate-800/30 lg:bg-transparent hover:bg-slate-800/80 border border-transparent hover:border-slate-700'}">
-                  <div class="w-8 h-8 rounded-xl flex items-center justify-center ${this.state.activeAdminTab === t.id ? 'bg-white/20' : 'bg-slate-800 group-hover:bg-slate-700'}">
-                    <i data-lucide="${t.icon}" class="w-4 h-4 ${this.state.activeAdminTab === t.id ? 'text-white' : 'text-slate-400 group-hover:text-indigo-400'}"></i> 
-                  </div>
-                  <div class="hidden lg:block">
-                    <div class="text-sm font-bold ${this.state.activeAdminTab === t.id ? 'text-white' : 'text-slate-200'}">${t.label}</div>
-                    <div class="text-[10px] ${this.state.activeAdminTab === t.id ? 'text-indigo-200' : 'text-slate-500'}">${t.sub}</div>
-                  </div>
-                  <div class="lg:hidden text-xs font-bold ${this.state.activeAdminTab === t.id ? 'text-white' : 'text-slate-300'}">
-                    ${t.label}
-                  </div>
+                <button onclick="app.setAdminTab('${t.id}')" class="whitespace-nowrap flex-shrink-0 lg:w-full text-left px-3 sm:px-4 py-2 sm:py-3 rounded-2xl text-[11px] sm:text-xs font-bold transition flex items-center gap-2 sm:gap-3 ${this.state.activeAdminTab === t.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-slate-800/30 lg:bg-transparent hover:bg-slate-800/50 text-slate-400 hover:text-white'}">
+                  <i data-lucide="${t.icon}" class="w-3.5 h-3.5 sm:w-4 sm:h-4 ${this.state.activeAdminTab === t.id ? 'text-indigo-200' : 'text-slate-500'}"></i> 
+                  ${t.label}
                 </button>
               `).join('')}
             </div>
 
             <!-- Desktop Exit/Public Buttons -->
             <div class="hidden lg:block mt-8 pt-5 border-t border-slate-700/50 space-y-2">
-              <a href="#/" class="w-full px-4 py-3 rounded-xl bg-slate-800/50 hover:bg-slate-800 text-slate-300 text-xs font-bold transition flex items-center justify-center gap-2 border border-slate-700/50">
-                <i data-lucide="external-link" class="w-4 h-4"></i> View Public Site
+              <a href="#/" class="w-full px-4 py-2.5 rounded-xl bg-slate-800/50 hover:bg-slate-800 text-slate-300 text-xs font-bold transition flex items-center justify-center gap-2">
+                <i data-lucide="eye" class="w-3.5 h-3.5"></i> View Public Site
               </a>
-              <button onclick="app.adminLogout()" class="w-full px-4 py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-bold transition flex items-center justify-center gap-2">
-                <i data-lucide="log-out" class="w-4 h-4"></i> Secure Logout
+              <button onclick="app.adminLogout()" class="w-full px-4 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-bold transition flex items-center justify-center gap-2">
+                <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Secure Exit
               </button>
             </div>
           </div>
@@ -1343,7 +1334,7 @@ const app = {
 
         <!-- Main Content Area -->
         <div class="flex-1 min-w-0">
-          <div class="glass-panel p-4 sm:p-6 lg:p-8 rounded-3xl border shadow-xl min-h-[70vh] relative">
+          <div class="glass-panel p-4 sm:p-6 lg:p-8 rounded-3xl border shadow-xl min-h-[60vh]">
             <div id="adminTabContent"></div>
           </div>
         </div>
