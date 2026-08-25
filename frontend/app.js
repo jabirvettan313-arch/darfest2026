@@ -68,28 +68,28 @@ const app = {
 
   async fetchInitialData() {
     try {
-      const [infoRes, housesRes, catsRes, annRes] = await Promise.all([
-        fetch(`${API_BASE}/fest/info`).then(r => r.json()),
-        fetch(`${API_BASE}/leaderboard`).then(r => r.json()),
-        fetch(`${API_BASE}/categories`).then(r => r.json()),
-        fetch(`${API_BASE}/announcements`).then(r => r.json()),
-      ]);
+      const initRes = await fetch(`${API_BASE}/init_data`).then(r => r.json());
 
-      if (infoRes.success) {
-        this.state.festInfo = infoRes;
-        this.updateFestHeader(infoRes.settings);
-      }
-      if (housesRes.success) {
-        this.state.houses = housesRes.leaderboard;
-      }
-      if (catsRes.success) {
-        this.state.categories = catsRes.categories;
-      }
-      if (annRes.success) {
-        this.state.announcements = annRes.announcements;
+      if (initRes.success) {
+        if (initRes.info.success) {
+          this.state.festInfo = initRes.info;
+          this.updateFestHeader(initRes.info.settings);
+        }
+        if (initRes.leaderboard.success) {
+          this.state.houses = initRes.leaderboard.leaderboard;
+        }
+        if (initRes.categories.success) {
+          this.state.categories = initRes.categories.categories;
+        }
+        if (initRes.announcements.success) {
+          this.state.announcements = initRes.announcements.announcements;
+        }
+        if (initRes.recent_results && initRes.recent_results.success) {
+          this.state.recentResults = initRes.recent_results.results;
+        }
       }
     } catch (err) {
-      console.error('Error fetching data:', err);
+      console.error('Error fetching initial data:', err);
     }
   },
 
@@ -239,12 +239,7 @@ const app = {
     const categoryChampions = this.state.festInfo?.category_champions || [];
     const individualChampions = this.state.festInfo?.individual_champions || [];
     const topHouse = stats.top_house;
-
-    let recentResults = [];
-    try {
-      const res = await fetch(`${API_BASE}/results`).then(r => r.json());
-      if (res.success) recentResults = res.results.slice(0, 4);
-    } catch (e) {}
+    const recentResults = this.state.recentResults || [];
 
     main.innerHTML = `
       <!-- 1. Hero Banner Section -->
