@@ -1452,12 +1452,10 @@ const app = {
 
     if (this.state.activeAdminTab === 'students') {
       await this.renderAdminStudents(container);
-    } else if (this.state.activeAdminTab === 'programmes') {
+    } else if (this.state.activeAdminTab === 'programmes' || this.state.activeAdminTab === 'results') {
       await this.renderAdminProgrammes(container);
     } else if (this.state.activeAdminTab === 'teams' || this.state.activeAdminTab === 'houses') {
       await this.renderAdminHouses(container);
-    } else if (this.state.activeAdminTab === 'results') {
-      await this.renderAdminResults(container);
     } else if (this.state.activeAdminTab === 'announcements') {
       await this.renderAdminAnnouncements(container);
     } else if (this.state.activeAdminTab === 'settings') {
@@ -2218,6 +2216,103 @@ const app = {
     `;
   },
 
+  async openResultModalForEvent(progId) {
+    if (!this.state.allStudents) {
+      const sRes = await fetch(`${API_BASE}/students`).then(r=>r.json());
+      if(sRes.success) this.state.allStudents = sRes.students;
+    }
+    const pRes = await fetch(`${API_BASE}/programmes`).then(r=>r.json());
+    const prog = pRes.programmes.find(p => p.id === progId);
+    if (!prog) return;
+
+    let result = null;
+    const rRes = await fetch(`${API_BASE}/results?include_unpublished=true`).then(r=>r.json());
+    if (rRes.success) {
+      result = rRes.results.find(r => r.programme_id === progId);
+    }
+
+    const modal = document.getElementById('eventResultModal');
+    modal.innerHTML = `
+      <div class="bg-slate-900 w-full max-w-4xl rounded-3xl border border-slate-700/50 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div class="p-5 sm:p-6 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center sticky top-0 z-10">
+          <div>
+            <h3 class="font-display font-black text-lg text-white flex items-center gap-2">
+              <i data-lucide="award" class="w-5 h-5 text-amber-400"></i>
+              ${result ? 'Edit Result' : 'Declare Result'}
+            </h3>
+            <p class="text-[11px] text-slate-400 font-bold mt-1 tracking-wider uppercase">${prog.code} - ${this.escapeHtml(prog.name)} (${prog.category_name})</p>
+          </div>
+          <button type="button" onclick="document.getElementById('eventResultModal').classList.add('hidden')" class="p-2 rounded-xl hover:bg-slate-800 text-slate-400">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <div class="p-5 sm:p-6 overflow-y-auto">
+          <form id="resultForm" onsubmit="app.submitResultDeclaration(event); document.getElementById('eventResultModal').classList.add('hidden');" class="space-y-5 text-left">
+            <select id="resProgId" class="hidden">
+              <option value="${prog.id}" data-format="${prog.format}" data-category="${prog.category_name}" data-cat-id="${prog.category_id}" selected></option>
+            </select>
+            <datalist id="studentsList"></datalist>
+
+            <div id="winnersContainer" class="space-y-3"></div>
+
+            <div class="pt-2">
+              <button type="button" onclick="app.addWinnerRow()" class="px-4 py-2.5 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 border border-indigo-500/20 text-xs font-bold rounded-xl transition flex items-center gap-2">
+                <i data-lucide="plus" class="w-4 h-4"></i> Add Participant
+              </button>
+            </div>
+
+            <div class="border-t border-slate-700/50 pt-5 space-y-4">
+              <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5">Result Image URL (Optional)</label>
+                <input id="resPhoto" type="url" placeholder="https://..." class="w-full p-2.5 rounded-xl glass-input text-xs font-mono">
+              </div>
+              <div class="flex items-center gap-2">
+                <input type="checkbox" id="resPublish" ${!result || result.published ? 'checked' : ''} class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-emerald-400">
+                <label for="resPublish" class="text-xs font-bold text-white">Publish Immediately (Visible to Public)</label>
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-800">
+              <button type="submit" class="w-full py-3.5 bg-amber-500 hover:bg-amber-400 text-amber-950 font-black text-sm rounded-2xl shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2">
+                <i data-lucide="check-circle" class="w-4 h-4"></i> Save & Update Leaderboard
+              </button>
+              ${result ? `
+                <button type="button" onclick="app.deleteResult(${result.result_id}); document.getElementById('eventResultModal').classList.add('hidden')" class="w-full mt-3 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold text-xs rounded-2xl transition flex items-center justify-center gap-2">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete Result Completely
+                </button>
+              ` : ''}
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+    modal.classList.remove('hidden');
+    lucide.createIcons({ root: modal });
+
+    this.updateStudentDatalist();
+
+    this.state.winnerRowCount = 0;
+    if (result && result.winners && result.winners.length > 0) {
+      document.getElementById('resPhoto').value = result.result_photo || '';
+      
+      result.winners.forEach((w, idx) => {
+          this.addWinnerRow();
+          const row = document.getElementById(`winner-row-${idx + 1}`);
+          row.querySelector('input[name="chestNo"]').value = w.chest_no;
+          row.querySelector('input[name="studentName"]').value = w.student_name;
+          row.querySelector('select[name="houseId"]').value = w.house_id || '';
+          row.querySelector('.winner-rank').value = w.position;
+          row.querySelector('.winner-grade').value = w.grade;
+          row.querySelector('.winner-points').value = w.points_awarded;
+      });
+    } else {
+      this.addWinnerRow();
+      this.addWinnerRow();
+      this.addWinnerRow();
+    }
+  },
+
   openAddProgrammeModal() {
     this.renderProgrammeModal({});
   },
@@ -2646,7 +2741,7 @@ const app = {
         this.showToast('Result Deleted Successfully!', 'success');
         this.state.allResultsCache = null;
         await this.fetchInitialData();
-        this.setAdminTab('results');
+        this.setAdminTab('programmes');
       } else {
         this.showToast(res.error || 'Failed to delete', 'error');
       }
@@ -2729,7 +2824,7 @@ const app = {
         this.showToast('Result Declared Successfully!', 'success');
         this.state.allResultsCache = null; // Clear cache
         await this.fetchInitialData();
-        this.setAdminTab('results'); // Refresh tab
+        this.setAdminTab('programmes'); // Refresh tab
       } else {
         this.showToast(res.error || 'Failed to save result', 'error');
       }
