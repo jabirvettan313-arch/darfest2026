@@ -1,10 +1,21 @@
 #!/usr/bin/env node
 const { spawn } = require('child_process');
 const path = require('path');
+const fs = require('fs');
 
 console.log('🚀 Starting DarFest 2026 Backend Server...');
 
-const scriptPath = path.join(__dirname, 'backend', 'server.py');
+const candidates = [
+  path.join(process.cwd(), 'backend', 'server.py'),
+  path.join(__dirname, 'backend', 'server.py'),
+  path.join(__dirname, '..', '..', 'backend', 'server.py'),
+  path.join(__dirname, '..', 'backend', 'server.py'),
+  path.join('/opt/render/project/src', 'backend', 'server.py')
+];
+
+const scriptPath = candidates.find(p => fs.existsSync(p)) || path.join(process.cwd(), 'backend', 'server.py');
+console.log(`📂 Using server script at: ${scriptPath}`);
+
 const py = spawn('python3', [scriptPath], {
   stdio: 'inherit',
   env: process.env

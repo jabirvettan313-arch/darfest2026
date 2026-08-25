@@ -1,12 +1,18 @@
-/**
- * Node.js entry point wrapper for cloud hosting platforms (like Render/Heroku)
- * Spawns the high-performance Python 3 backend server.
- */
 const { spawn } = require('child_process');
 const path = require('path');
+const fs = require('fs');
 
-const scriptPath = path.join(__dirname, 'backend', 'server.py');
-console.log(`🚀 Launching DarFest 2026 Backend from: ${scriptPath}`);
+console.log('🚀 Starting DarFest 2026 Backend Server from server.js...');
+
+const candidates = [
+  path.join(process.cwd(), 'backend', 'server.py'),
+  path.join(__dirname, 'backend', 'server.py'),
+  path.join(__dirname, '..', '..', 'backend', 'server.py'),
+  path.join('/opt/render/project/src', 'backend', 'server.py')
+];
+
+const scriptPath = candidates.find(p => fs.existsSync(p)) || path.join(process.cwd(), 'backend', 'server.py');
+console.log(`📂 Using server script at: ${scriptPath}`);
 
 const pyProcess = spawn('python3', [scriptPath], {
   stdio: 'inherit',
@@ -19,6 +25,5 @@ pyProcess.on('error', (err) => {
 });
 
 pyProcess.on('close', (code) => {
-  console.log(`Backend server stopped with exit code ${code}`);
   process.exit(code || 0);
 });
