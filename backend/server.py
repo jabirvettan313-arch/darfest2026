@@ -160,7 +160,7 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
                 cursor.execute('SELECT COUNT(*) FROM programmes')
                 total_programmes = cursor.fetchone()[0]
 
-                cursor.execute('SELECT COUNT(*) FROM results WHERE published = 1')
+                cursor.execute('SELECT COUNT(r.id) FROM results r JOIN programmes p ON r.programme_id = p.id WHERE r.published = 1')
                 results_declared = cursor.fetchone()[0]
 
                 cursor.execute('SELECT name, points, color, bg_gradient FROM houses ORDER BY points DESC, name ASC LIMIT 1')
@@ -337,7 +337,7 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
                 cursor.execute('SELECT COUNT(*) FROM programmes')
                 total_programmes = cursor.fetchone()[0]
 
-                cursor.execute('SELECT COUNT(*) FROM results WHERE published = 1')
+                cursor.execute('SELECT COUNT(r.id) FROM results r JOIN programmes p ON r.programme_id = p.id WHERE r.published = 1')
                 results_declared = cursor.fetchone()[0]
 
                 cursor.execute('SELECT name, points, color, bg_gradient FROM houses ORDER BY points DESC, name ASC LIMIT 1')
@@ -1160,8 +1160,19 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
             # DELETE /api/admin/programmes/<id>
             match_prog = re.match(r'^/api/admin/programmes/(\d+)$', path)
             if match_prog:
+                
                 prog_id = int(match_prog.group(1))
+                
+                # Find associated results to delete winners first
+                cursor.execute('SELECT id FROM results WHERE programme_id = ?', (prog_id,))
+                res_rows = cursor.fetchall()
+                for r_row in res_rows:
+                    cursor.execute('DELETE FROM result_winners WHERE result_id = ?', (r_row['id'],))
+                
+                # Delete results and the programme
+                cursor.execute('DELETE FROM results WHERE programme_id = ?', (prog_id,))
                 cursor.execute('DELETE FROM programmes WHERE id = ?', (prog_id,))
+
                 conn.commit()
                 recalculate_house_points_conn(conn)
                 self.send_json({"success": True, "message": "Programme deleted successfully"})
