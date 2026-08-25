@@ -1,5 +1,5 @@
 /**
- * DarFest 2026 - Main Frontend Controller (English Only)
+ * MUBARAZA — Dars Fest '26 - Main Frontend Controller (English Only)
  * Features: Dark/Light Mode, Overall Marks Tally, Main & Category Champions Showcase,
  * Results Page Introduction, Advanced Result Search & Filters, and Shareable Poster Generator.
  */
@@ -33,7 +33,7 @@ const app = {
   },
 
   async init() {
-    console.log('Initializing DarFest 2026 English Portal...');
+    console.log('Initializing MUBARAZA Portal...');
     this.applyTheme(this.state.theme);
     await this.fetchInitialData();
     this.setupRouting();

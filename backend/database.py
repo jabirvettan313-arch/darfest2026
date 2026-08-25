@@ -299,7 +299,7 @@ def seed_default_data(cursor, conn):
     announcements = [
         ('Stage 2 Update', 'Mime competition is currently underway on Stage 2 (Chitralekha).', 'breaking', 1, 1),
         ('Oppana Call Sheet', 'All participating teams for Oppana must report to Green Room 1 by 4:00 PM.', 'urgent', 1, 1),
-        ('Welcome to DarFest 2026', 'Live scores and results are updated in real-time. Follow our Telegram channel for live alerts!', 'normal', 1, 1)
+        ('Welcome to MUBARAZA', 'Live scores and results are updated in real-time. Follow our Telegram channel for live alerts!', 'normal', 1, 1)
     ]
     for a in announcements:
         cursor.execute('''
