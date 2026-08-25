@@ -849,7 +849,6 @@ const app = {
             <span>All Houses Scorecard</span>
             <span class="text-xs text-slate-400 font-normal">Ranked by Total Marks</span>
           </div>
-
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs sm:text-sm">
               <thead class="text-slate-400 uppercase text-xs border-b">
@@ -1420,6 +1419,25 @@ const app = {
     this.renderAdminView();
   },
 
+  filterAdminTable(inputId, tableId) {
+    const input = document.getElementById(inputId);
+    const filter = input.value.toLowerCase();
+    const table = document.getElementById(tableId);
+    if (!table) return;
+    const tr = table.getElementsByTagName("tr");
+    for (let i = 1; i < tr.length; i++) {
+      const tds = tr[i].getElementsByTagName("td");
+      if (tds.length === 1 && tds[0].getAttribute("colspan")) continue;
+      let match = false;
+      for (let j = 0; j < tds.length; j++) {
+        if (tds[j] && tds[j].textContent.toLowerCase().indexOf(filter) > -1) {
+          match = true;
+          break;
+        }
+      }
+      tr[i].style.display = match ? "" : "none";
+    }
+  },
   async renderAdminTabContent() {
     const container = document.getElementById('adminTabContent');
     if (!container) return;
@@ -1516,10 +1534,14 @@ const app = {
             <i data-lucide="user-plus" class="w-4 h-4"></i> Add Student
           </button>
         </div>
+        <div class="relative w-full mb-4 mt-6">
+          <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input type="text" id="studentSearch" onkeyup="app.filterAdminTable('studentSearch', 'studentTable')" placeholder="Search students by name, chest number, house, category..." class="w-full pl-10 pr-4 py-3 rounded-2xl glass-input text-sm font-bold">
+        </div>
 
         <div class="glass-panel rounded-3xl overflow-hidden border">
           <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
+            <table id="studentTable" class="w-full text-left text-xs">
               <thead class="text-slate-400 uppercase border-b">
                 <tr>
                   <th class="py-3 px-4">Chest #</th>
@@ -1809,10 +1831,14 @@ const app = {
             <i data-lucide="plus" class="w-4 h-4"></i> Add House
           </button>
         </div>
+        <div class="relative w-full mb-4 mt-6">
+          <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input type="text" id="houseSearch" onkeyup="app.filterAdminTable('houseSearch', 'houseTable')" placeholder="Search houses by name, code..." class="w-full pl-10 pr-4 py-3 rounded-2xl glass-input text-sm font-bold">
+        </div>
 
         <div class="glass-panel rounded-3xl overflow-hidden border">
           <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
+            <table id="houseTable" class="w-full text-left text-xs">
               <thead class="text-slate-400 uppercase border-b">
                 <tr>
                   <th class="py-3 px-4">Code</th>
@@ -1984,10 +2010,14 @@ const app = {
             <i data-lucide="plus" class="w-4 h-4"></i> Add Event
           </button>
         </div>
+        <div class="relative w-full mb-4 mt-6">
+          <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input type="text" id="progSearch" onkeyup="app.filterAdminTable('progSearch', 'progTable')" placeholder="Search events by code, name, category, format..." class="w-full pl-10 pr-4 py-3 rounded-2xl glass-input text-sm font-bold">
+        </div>
 
         <div class="glass-panel rounded-3xl overflow-hidden border">
           <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
+            <table id="progTable" class="w-full text-left text-xs">
               <thead class="text-slate-400 uppercase border-b">
                 <tr>
                   <th class="py-3 px-4">Code</th>
@@ -2349,8 +2379,13 @@ const app = {
             <h2 class="font-display font-black text-lg text-white">Published Results</h2>
             <span class="text-xs text-slate-400">${results.length} Results</span>
           </div>
+          <div class="relative w-full mb-4">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="resSearch" onkeyup="app.filterAdminTable('resSearch', 'resTable')" placeholder="Search results by event, category, winner name..." class="w-full pl-10 pr-4 py-2.5 rounded-2xl glass-input text-xs font-bold">
+          </div>
+
           <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
+            <table id="resTable" class="w-full text-left text-xs">
               <thead class="text-slate-400 uppercase border-b">
                 <tr>
                   <th class="py-3 px-4">Event</th>
