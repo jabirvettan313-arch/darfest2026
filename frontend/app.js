@@ -1190,7 +1190,7 @@ const app = {
                 <span>Festival Admin Hub</span>
                 <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold">AUTHORIZED</span>
               </div>
-              <p class="text-xs text-slate-400">Manage Students, Programmes, Results & Telegram Broadcasts</p>
+              <p class="text-xs text-slate-400">Manage Students, Programmes, and Results</p>
             </div>
           </div>
 
@@ -1211,7 +1211,6 @@ const app = {
             { id: 'programmes', label: 'Programmes CRUD', icon: 'calendar' },
             { id: 'results', label: 'Declare Results', icon: 'trophy' },
             { id: 'announcements', label: 'Announcements', icon: 'bell' },
-            { id: 'telegram', label: 'Telegram Bot', icon: 'send' },
             { id: 'settings', label: 'Fest Settings', icon: 'settings' }
           ].map(t => `
             <button onclick="app.setAdminTab('${t.id}')" class="px-4 py-2 rounded-2xl text-xs font-bold transition flex items-center gap-2 ${this.state.activeAdminTab === t.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'glass-card text-slate-400 hover:text-white'}">
@@ -1314,8 +1313,6 @@ const app = {
       await this.renderAdminResults(container);
     } else if (this.state.activeAdminTab === 'announcements') {
       await this.renderAdminAnnouncements(container);
-    } else if (this.state.activeAdminTab === 'telegram') {
-      await this.renderAdminTelegram(container);
     } else if (this.state.activeAdminTab === 'settings') {
       await this.renderAdminSettings(container);
     } else {
@@ -1355,17 +1352,6 @@ const app = {
             <div class="font-display font-black text-3xl text-white">${stats.results_declared || 0}</div>
             <button onclick="app.setAdminTab('results')" class="text-xs text-amber-400 font-bold">Declare Results →</button>
           </div>
-
-          <div class="glass-panel p-5 rounded-3xl border space-y-2">
-            <div class="flex items-center justify-between text-sky-400">
-              <span class="text-xs font-bold uppercase">Telegram Sync</span>
-              <i data-lucide="send" class="w-5 h-5"></i>
-            </div>
-            <div class="font-display font-bold text-sm text-sky-300 truncate">
-              ${this.state.festInfo?.settings?.telegram_chat_id || 'Not Configured'}
-            </div>
-            <button onclick="app.setAdminTab('telegram')" class="text-xs text-sky-400 font-bold">Configure Bot →</button>
-          </div>
         </div>
 
         <div class="glass-panel p-6 rounded-3xl border flex flex-col md:flex-row items-center justify-between gap-4">
@@ -1373,7 +1359,7 @@ const app = {
             <h3 class="font-display font-black text-lg text-white flex items-center gap-2">
               <i data-lucide="sparkles" class="w-5 h-5 text-amber-400"></i> Ready to announce a competition result?
             </h3>
-            <p class="text-xs text-slate-300">Publish winners with points, grades, and auto-broadcast to Telegram.</p>
+            <p class="text-xs text-slate-300">Publish winners with points and grades.</p>
           </div>
           <button onclick="app.setAdminTab('results')" class="px-5 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-2xl shadow-lg transition flex items-center gap-2 shrink-0">
             <i data-lucide="plus-circle" class="w-4 h-4"></i> Declare New Result
@@ -1810,7 +1796,7 @@ const app = {
               <h2 class="font-display font-black text-xl text-white flex items-center gap-2">
                 <i data-lucide="award" class="w-6 h-6 text-amber-400"></i> Declare & Publish Result
               </h2>
-              <p class="text-xs text-slate-400">Assign winners, calculate house marks, and auto-post to Telegram</p>
+              <p class="text-xs text-slate-400">Assign winners and calculate house marks</p>
             </div>
           </div>
 
@@ -1942,16 +1928,6 @@ const app = {
               </div>
             </div>
 
-            <!-- Telegram Broadcast Checkbox -->
-            <div class="p-3.5 rounded-2xl bg-sky-950/30 border border-sky-500/30 flex items-center justify-between">
-              <div class="flex items-center gap-2.5">
-                <input id="resSendTelegram" type="checkbox" checked class="w-4 h-4 text-sky-500 rounded">
-                <div>
-                  <div class="font-bold text-xs text-sky-300">Broadcast result to Telegram Channel</div>
-                  <div class="text-[11px] text-slate-400">Instantly pushes formatted winners list & marks to your channel</div>
-                </div>
-              </div>
-              <i data-lucide="send" class="w-5 h-5 text-sky-400"></i>
             </div>
 
             <div class="flex justify-end pt-2">
@@ -2063,7 +2039,7 @@ const app = {
       programme_id: progId,
       published: true,
       winners: winners,
-      send_telegram: document.getElementById('resSendTelegram')?.checked
+      send_telegram: false
     };
 
     try {
@@ -2122,7 +2098,7 @@ const app = {
       content: document.getElementById('annContent').value.trim(),
       priority: 'normal',
       show_ticker: true,
-      send_telegram: true
+      send_telegram: false
     };
 
     try {
@@ -2140,100 +2116,6 @@ const app = {
       }
     } catch (e) {
       this.showToast('Failed to post', 'error');
-    }
-  },
-
-  // ---------------- ADMIN TELEGRAM BOT TAB ----------------
-  async renderAdminTelegram(container) {
-    let config = { bot_token: '', chat_id: '' };
-    try {
-      const res = await fetch(`${API_BASE}/admin/telegram/config`, {
-        headers: { 'X-Admin-Pin': this.state.adminToken }
-      }).then(r => r.json());
-      if (res.success) config = res.config;
-    } catch (e) {}
-
-    container.innerHTML = `
-      <div class="max-w-xl mx-auto space-y-6">
-        <div class="glass-panel p-6 sm:p-8 rounded-3xl border shadow-2xl space-y-4 text-left">
-          <div class="flex items-center gap-3 border-b pb-3">
-            <div class="w-10 h-10 rounded-2xl bg-sky-500/20 text-sky-400 flex items-center justify-center">
-              <i data-lucide="send" class="w-5 h-5"></i>
-            </div>
-            <div>
-              <h2 class="font-display font-black text-lg text-white">Telegram Channel Settings</h2>
-              <p class="text-xs text-slate-400">Configure broadcast bot & channel</p>
-            </div>
-          </div>
-
-          <form onsubmit="app.saveTelegramConfig(event)" class="space-y-4">
-            <div>
-              <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Bot Token</label>
-              <input id="tgBotToken" type="password" value="${config.bot_token || ''}" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-mono font-bold">
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Channel Username / Chat ID</label>
-              <input id="tgChatId" type="text" value="${config.chat_id || ''}" placeholder="e.g. @darfest2026_channel" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-mono font-bold">
-            </div>
-
-            <div class="flex justify-between pt-2">
-              <button type="button" onclick="app.testTelegramConnection()" class="px-4 py-2 rounded-2xl glass-card text-sky-400 text-xs font-bold">
-                Test Ping
-              </button>
-              <button type="submit" class="px-5 py-2.5 bg-sky-500 text-slate-950 text-xs font-black rounded-2xl">
-                Save Settings
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    `;
-  },
-
-  async saveTelegramConfig(e) {
-    e.preventDefault();
-    const payload = {
-      bot_token: document.getElementById('tgBotToken').value.trim(),
-      chat_id: document.getElementById('tgChatId').value.trim(),
-      auto_post: true
-    };
-
-    try {
-      const res = await fetch(`${API_BASE}/admin/telegram/config`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Admin-Pin': this.state.adminToken },
-        body: JSON.stringify(payload)
-      }).then(r => r.json());
-
-      if (res.success) {
-        this.showToast('Telegram settings saved!', 'success');
-        await this.fetchInitialData();
-      }
-    } catch (e) {
-      this.showToast('Failed to save settings', 'error');
-    }
-  },
-
-  async testTelegramConnection() {
-    this.showToast('Testing Telegram connection...', 'info');
-    try {
-      const res = await fetch(`${API_BASE}/admin/telegram/test`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Admin-Pin': this.state.adminToken },
-        body: JSON.stringify({
-          bot_token: document.getElementById('tgBotToken')?.value.trim(),
-          chat_id: document.getElementById('tgChatId')?.value.trim()
-        })
-      }).then(r => r.json());
-
-      if (res.success) {
-        this.showToast(`Bot Connected: @${res.bot_username}!`, 'success');
-      } else {
-        this.showToast(res.error || 'Connection failed', 'error');
-      }
-    } catch (e) {
-      this.showToast('Test failed', 'error');
     }
   },
 
