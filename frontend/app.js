@@ -2332,6 +2332,38 @@ const app = {
             </button>
           </form>
         </div>
+
+        <div class="glass-panel p-6 sm:p-8 rounded-3xl border shadow-xl">
+          <div class="flex items-center justify-between border-b pb-4 mb-4">
+            <h2 class="font-display font-black text-lg text-white">Published Results</h2>
+            <span class="text-xs text-slate-400">${results.length} Results</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="text-slate-400 uppercase border-b">
+                <tr>
+                  <th class="py-3 px-4">Event</th>
+                  <th class="py-3 px-4">Category</th>
+                  <th class="py-3 px-4">1st Place</th>
+                  <th class="py-3 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y">
+                ${results.length === 0 ? \`<tr><td colspan="4" class="py-4 text-center text-slate-500">No results published yet</td></tr>\` : results.map(r => \`
+                  <tr class="hover:bg-slate-800/20 transition">
+                    <td class="py-3 px-4 font-bold text-white">\${r.programme_code} - \${this.escapeHtml(r.programme_name)}</td>
+                    <td class="py-3 px-4 text-slate-400">\${r.category_name}</td>
+                    <td class="py-3 px-4 text-amber-400 font-bold">\${r.winners && r.winners.find(w => w.position === 1) ? this.escapeHtml(r.winners.find(w => w.position === 1).student_name) : 'None'}</td>
+                    <td class="py-3 px-4 text-right">
+                      <button onclick='app.editResult(\${JSON.stringify(r).replace(/'/g, "&#39;")})' class="p-1.5 rounded hover:bg-slate-800 text-sky-400 mr-2"><i data-lucide="edit-2" class="w-3.5 h-3.5"></i></button>
+                      <button onclick="app.deleteResult(\${r.result_id})" class="p-1.5 rounded hover:bg-slate-800 text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                    </td>
+                  </tr>
+                \`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     `;
 
@@ -2346,6 +2378,50 @@ const app = {
       if (w3Rank) w3Rank.value = '3';
       this.autoCalculatePoints();
     }, 50);
+  },
+
+  editResult(result) {
+    document.getElementById('resProgId').value = result.programme_id;
+    this.updateStudentDatalist();
+    document.getElementById('resPhoto').value = result.result_photo || '';
+    
+    const container = document.getElementById('winnersContainer');
+    container.innerHTML = '';
+    this.state.winnerRowCount = 0;
+
+    result.winners.forEach((w, idx) => {
+        this.addWinnerRow();
+        const row = document.getElementById(`winner-row-\${idx + 1}`);
+        row.querySelector('input[name="chestNo"]').value = w.chest_no;
+        row.querySelector('input[name="studentName"]').value = w.student_name;
+        row.querySelector('select[name="houseId"]').value = w.house_id || '';
+        row.querySelector('.winner-rank').value = w.position;
+        row.querySelector('.winner-grade').value = w.grade;
+        row.querySelector('.winner-points').value = w.points_awarded;
+    });
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    this.showToast('Result loaded for editing', 'success');
+  },
+
+  async deleteResult(id) {
+    if (!confirm('Are you sure you want to delete this result? Leaderboard points will be removed.')) return;
+    try {
+      const res = await fetch(`${API_BASE}/admin/results/${id}`, {
+        method: 'DELETE',
+        headers: { 'X-Admin-Pin': this.state.adminToken }
+      }).then(r => r.json());
+      if (res.success) {
+        this.showToast('Result Deleted Successfully!', 'success');
+        this.state.allResultsCache = null;
+        await this.fetchInitialData();
+        this.setAdminTab('results');
+      } else {
+        this.showToast(res.error || 'Failed to delete', 'error');
+      }
+    } catch (e) {
+      this.showToast('Error deleting result', 'error');
+    }
   },
 
   async submitResultDeclaration(e) {
