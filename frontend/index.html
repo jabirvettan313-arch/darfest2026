@@ -2,15 +2,18 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KALOTSAV 2026 — Art Fest Results & Live Portal</title>
-  <meta name="description" content="Official Live Result Publishing Portal, House Leaderboard, and Schedule for Kalotsav 2026 Arts Festival.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>DARFEST 2026 — Live Results & Fest Portal</title>
+  <meta name="description" content="Official Live Result Publishing Portal, House Leaderboard, and Schedule for DarFest 2026 Arts Festival.">
   
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap-grid.min.css" rel="stylesheet">
+
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -38,6 +41,7 @@
           fontFamily: {
             sans: ['"Plus Jakarta Sans"', 'sans-serif'],
             display: ['"Outfit"', 'sans-serif'],
+            body: ['"Manrope"', 'sans-serif'],
           }
         }
       }
@@ -48,49 +52,46 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Canvas Confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Custom Styles -->
   <link rel="stylesheet" href="/styles.css">
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
+<body class="min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
 
   <!-- ================= TOP TICKER ================= -->
-  <div id="liveTickerBar" class="bg-gradient-to-r from-indigo-900 via-purple-900 to-slate-900 border-b border-indigo-500/20 text-xs py-2 px-4 flex items-center relative z-40 overflow-hidden shadow-lg">
-    <div class="flex items-center gap-2 font-bold uppercase tracking-wider text-indigo-300 shrink-0 pr-3 border-r border-indigo-700/50">
+  <div id="liveTickerBar" class="bg-gradient-to-r from-indigo-900 via-purple-900 to-slate-900 border-b border-indigo-500/20 text-xs py-2 px-3 sm:px-4 flex items-center relative z-40 overflow-hidden shadow-lg">
+    <div class="flex items-center gap-1.5 font-black uppercase tracking-wider text-amber-300 shrink-0 pr-3 border-r border-indigo-700/50 text-[11px] sm:text-xs">
       <span class="w-2.5 h-2.5 rounded-full bg-red-500 pulse-live inline-block"></span>
-      <i data-lucide="bell" class="w-3.5 h-3.5 text-amber-400"></i>
-      <span>Live Updates</span>
+      <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
+      <span>LIVE</span>
     </div>
-    <div class="ticker-wrap flex-1 ml-3">
-      <div id="tickerContent" class="ticker-move flex items-center gap-10 text-slate-200">
-        <!-- Injected via JavaScript -->
-        <span>⚡ Welcome to the official Arts Festival Live Portal! Stay tuned for real-time result declarations.</span>
+    <div class="ticker-wrap flex-1 ml-2 sm:ml-3">
+      <div id="tickerContent" class="ticker-move flex items-center gap-8 text-white font-medium text-xs">
+        <span>⚡ Welcome to DARFEST 2026! Results are updated in real-time. Follow our Telegram channel for live alerts!</span>
       </div>
     </div>
-    <button onclick="app.showAnnouncementsModal()" class="shrink-0 ml-3 text-xs bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 px-2 py-0.5 rounded border border-indigo-500/30 transition flex items-center gap-1">
-      <i data-lucide="layers" class="w-3 h-3"></i> View All
+    <button onclick="app.showAnnouncementsModal()" class="shrink-0 ml-2 text-[11px] bg-indigo-500/30 hover:bg-indigo-500/40 text-indigo-200 px-2 py-0.5 rounded-md border border-indigo-400/30 transition flex items-center gap-1">
+      <i data-lucide="bell" class="w-3 h-3 text-amber-300"></i> Alerts
     </button>
   </div>
 
   <!-- ================= NAVBAR ================= -->
-  <nav class="sticky top-0 z-40 glass-panel border-b border-slate-800/80 shadow-xl transition duration-200">
+  <nav class="sticky top-0 z-40 glass-panel border-b shadow-lg transition duration-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
         
         <!-- Logo & Fest Title -->
-        <a href="#/" class="flex items-center gap-3 group">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-0.5 shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-300">
+        <a href="#/" class="flex items-center gap-2.5 group">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-rose-500 to-indigo-600 p-0.5 shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-300">
             <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-              <i data-lucide="sparkles" class="w-5 h-5 text-indigo-400 group-hover:text-pink-400 transition-colors"></i>
+              <i data-lucide="sparkles" class="w-5 h-5 text-amber-400 group-hover:rotate-12 transition-transform"></i>
             </div>
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <span id="navFestName" class="font-display font-black text-lg sm:text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-slate-400">
-                KALOTSAV 2026
+              <span id="navFestName" class="font-display font-black text-lg sm:text-xl tracking-tight text-white">
+                DARFEST 2026
               </span>
-              <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 animate-pulse">
                 LIVE
               </span>
             </div>
@@ -99,154 +100,153 @@
         </a>
 
         <!-- Desktop Navigation Links -->
-        <div class="hidden md:flex items-center gap-1 font-medium text-sm">
-          <a href="#/" class="nav-link px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition flex items-center gap-2" data-page="home">
-            <i data-lucide="home" class="w-4 h-4 text-indigo-400"></i> Home
+        <div class="hidden md:flex items-center gap-1 font-semibold text-sm">
+          <a href="#/" class="nav-link px-3.5 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/60 transition flex items-center gap-2" data-page="home">
+            <i data-lucide="home" class="w-4 h-4 text-indigo-400"></i> <span>Home</span>
           </a>
-          <a href="#/results" class="nav-link px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition flex items-center gap-2" data-page="results">
-            <i data-lucide="trophy" class="w-4 h-4 text-amber-400"></i> Results
+          <a href="#/results" class="nav-link px-3.5 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/60 transition flex items-center gap-2" data-page="results">
+            <i data-lucide="trophy" class="w-4 h-4 text-amber-400"></i> <span>Results</span>
           </a>
-          <a href="#/leaderboard" class="nav-link px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition flex items-center gap-2" data-page="leaderboard">
-            <i data-lucide="crown" class="w-4 h-4 text-yellow-400"></i> Leaderboard
+          <a href="#/leaderboard" class="nav-link px-3.5 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/60 transition flex items-center gap-2" data-page="leaderboard">
+            <i data-lucide="crown" class="w-4 h-4 text-yellow-400"></i> <span>Leaderboard</span>
           </a>
-          <a href="#/schedule" class="nav-link px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition flex items-center gap-2" data-page="schedule">
-            <i data-lucide="calendar" class="w-4 h-4 text-emerald-400"></i> Schedule
+          <a href="#/schedule" class="nav-link px-3.5 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/60 transition flex items-center gap-2" data-page="schedule">
+            <i data-lucide="calendar" class="w-4 h-4 text-emerald-400"></i> <span>Schedule</span>
           </a>
-          <a href="#/students" class="nav-link px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition flex items-center gap-2" data-page="students">
-            <i data-lucide="user-search" class="w-4 h-4 text-sky-400"></i> Find Student
+          <a href="#/students" class="nav-link px-3.5 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/60 transition flex items-center gap-2" data-page="students">
+            <i data-lucide="search" class="w-4 h-4 text-sky-400"></i> <span>Find Student</span>
           </a>
         </div>
 
-        <!-- Right Action Buttons -->
-        <div class="flex items-center gap-3">
-          <!-- Refresh Button -->
-          <button onclick="app.refreshData()" title="Refresh live data" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800/60 rounded-lg transition border border-slate-800">
+        <!-- Right Control Buttons (Theme Toggle, Refresh, Admin) -->
+        <div class="flex items-center gap-2 sm:gap-3">
+          
+          <!-- ☀️ / 🌙 Dark-Light Mode Switcher Button -->
+          <button onclick="app.toggleTheme()" id="themeToggleBtn" title="Toggle Dark / Light Mode" class="p-2 rounded-xl glass-card hover:scale-105 active:scale-95 text-amber-400 hover:text-amber-300 transition flex items-center justify-center">
+            <i data-lucide="sun" id="themeIcon" class="w-5 h-5"></i>
+          </button>
+
+          <!-- Refresh Live Data -->
+          <button onclick="app.refreshData()" title="Refresh live data" class="p-2 rounded-xl glass-card text-slate-400 hover:text-white hover:scale-105 active:scale-95 transition flex items-center justify-center">
             <i data-lucide="rotate-cw" class="w-4 h-4"></i>
           </button>
 
-          <!-- Telegram Quick Button -->
-          <button id="tgChannelBtn" onclick="app.openTelegramChannel()" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 text-xs font-semibold transition">
-            <i data-lucide="send" class="w-3.5 h-3.5"></i> Telegram Channel
+          <!-- Telegram Channel Link -->
+          <button id="tgChannelBtn" onclick="app.openTelegramChannel()" class="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 text-xs font-bold transition">
+            <i data-lucide="send" class="w-3.5 h-3.5"></i> Telegram
           </button>
 
-          <!-- Admin Portal Link / Lock -->
-          <a href="#/admin" id="adminPortalBtn" class="px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-indigo-600 hover:text-white text-slate-300 border border-slate-700 text-xs font-semibold transition flex items-center gap-1.5">
-            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+          <!-- Admin Portal Link -->
+          <a href="#/admin" id="adminPortalBtn" class="px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-indigo-600 hover:text-white text-slate-300 border border-slate-700 text-xs font-bold transition flex items-center gap-1.5">
+            <i data-lucide="shield-check" class="w-4 h-4"></i>
             <span class="hidden sm:inline">Admin</span>
           </a>
-
-          <!-- Mobile Hamburger Toggle -->
-          <button onclick="app.toggleMobileMenu()" class="md:hidden p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg">
-            <i data-lucide="menu" class="w-6 h-6"></i>
-          </button>
         </div>
 
       </div>
-    </div>
-
-    <!-- Mobile Navigation Drawer -->
-    <div id="mobileMenu" class="hidden md:hidden border-t border-slate-800 bg-slate-950/95 px-4 pt-2 pb-4 space-y-1">
-      <a href="#/" onclick="app.toggleMobileMenu()" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-slate-800 text-sm font-medium flex items-center gap-2">
-        <i data-lucide="home" class="w-4 h-4 text-indigo-400"></i> Home
-      </a>
-      <a href="#/results" onclick="app.toggleMobileMenu()" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-slate-800 text-sm font-medium flex items-center gap-2">
-        <i data-lucide="trophy" class="w-4 h-4 text-amber-400"></i> Results
-      </a>
-      <a href="#/leaderboard" onclick="app.toggleMobileMenu()" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-slate-800 text-sm font-medium flex items-center gap-2">
-        <i data-lucide="crown" class="w-4 h-4 text-yellow-400"></i> Leaderboard
-      </a>
-      <a href="#/schedule" onclick="app.toggleMobileMenu()" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-slate-800 text-sm font-medium flex items-center gap-2">
-        <i data-lucide="calendar" class="w-4 h-4 text-emerald-400"></i> Schedule
-      </a>
-      <a href="#/students" onclick="app.toggleMobileMenu()" class="block px-3 py-2 rounded-lg text-slate-200 hover:bg-slate-800 text-sm font-medium flex items-center gap-2">
-        <i data-lucide="user-search" class="w-4 h-4 text-sky-400"></i> Find Student
-      </a>
-      <a href="#/admin" onclick="app.toggleMobileMenu()" class="block px-3 py-2 rounded-lg text-indigo-400 hover:bg-indigo-950 text-sm font-medium flex items-center gap-2">
-        <i data-lucide="shield-check" class="w-4 h-4"></i> Admin Console
-      </a>
     </div>
   </nav>
 
   <!-- ================= DYNAMIC MAIN CONTAINER ================= -->
-  <main id="appMain" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <main id="appMain" class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-5 pb-24 md:pb-8">
     <!-- Rendered dynamically by app.js -->
     <div class="flex items-center justify-center py-24">
       <div class="flex flex-col items-center gap-4">
         <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-        <p class="text-slate-400 text-sm animate-pulse">Loading ArtFest Portal...</p>
+        <p class="text-slate-400 text-sm font-semibold animate-pulse">Loading DarFest 2026 Portal...</p>
       </div>
     </div>
   </main>
 
+  <!-- ================= MOBILE APP-LIKE BOTTOM NAVIGATION BAR ================= -->
+  <div class="mobile-bottom-nav md:hidden py-1 px-2 flex items-center justify-around no-print">
+    <a href="#/" class="mobile-nav-btn flex flex-col items-center justify-center py-1 px-3 text-[10px] font-bold text-slate-400 hover:text-indigo-400 transition" data-page="home">
+      <i data-lucide="home" class="w-5 h-5 mb-0.5"></i>
+      <span>Home</span>
+    </a>
+    <a href="#/results" class="mobile-nav-btn flex flex-col items-center justify-center py-1 px-3 text-[10px] font-bold text-slate-400 hover:text-amber-400 transition" data-page="results">
+      <i data-lucide="trophy" class="w-5 h-5 mb-0.5"></i>
+      <span>Results</span>
+    </a>
+    <a href="#/leaderboard" class="mobile-nav-btn flex flex-col items-center justify-center py-1 px-3 text-[10px] font-bold text-slate-400 hover:text-yellow-400 transition" data-page="leaderboard">
+      <i data-lucide="crown" class="w-5 h-5 mb-0.5"></i>
+      <span>Points</span>
+    </a>
+    <a href="#/schedule" class="mobile-nav-btn flex flex-col items-center justify-center py-1 px-3 text-[10px] font-bold text-slate-400 hover:text-emerald-400 transition" data-page="schedule">
+      <i data-lucide="calendar" class="w-5 h-5 mb-0.5"></i>
+      <span>Schedule</span>
+    </a>
+    <a href="#/students" class="mobile-nav-btn flex flex-col items-center justify-center py-1 px-3 text-[10px] font-bold text-slate-400 hover:text-sky-400 transition" data-page="students">
+      <i data-lucide="search" class="w-5 h-5 mb-0.5"></i>
+      <span>Find Me</span>
+    </a>
+  </div>
+
   <!-- ================= FOOTER ================= -->
-  <footer class="mt-auto border-t border-slate-900 bg-slate-950/80 backdrop-blur text-slate-500 text-xs py-8 no-print">
+  <footer class="mt-auto border-t text-xs py-8 no-print transition">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
       <div class="flex items-center gap-2">
-        <div class="w-6 h-6 rounded bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center">
-          <i data-lucide="award" class="w-3.5 h-3.5 text-indigo-400"></i>
+        <div class="w-7 h-7 rounded-lg bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center">
+          <i data-lucide="award" class="w-4 h-4 text-indigo-400"></i>
         </div>
-        <span class="font-medium text-slate-400"><span id="footerFestName">KALOTSAV 2026</span> • Result Publishing Portal</span>
+        <span class="font-bold"><span id="footerFestName">DARFEST 2026</span> • Live Results Portal</span>
       </div>
-      <div class="flex items-center gap-6">
+      <div class="flex items-center gap-6 font-semibold">
         <a href="#/results" class="hover:text-indigo-400 transition">Declared Results</a>
         <a href="#/leaderboard" class="hover:text-indigo-400 transition">House Points</a>
         <a href="#/schedule" class="hover:text-indigo-400 transition">Stage Schedule</a>
-        <a href="#/admin" class="text-slate-600 hover:text-indigo-400 transition flex items-center gap-1">
+        <a href="#/admin" class="hover:text-indigo-400 transition flex items-center gap-1">
           <i data-lucide="lock" class="w-3 h-3"></i> Admin
         </a>
       </div>
-      <p class="text-slate-600">Real-time Score Engine & Telegram Sync</p>
+      <p class="text-slate-500">Live Result Engine & Telegram Sync</p>
     </div>
   </footer>
 
-  <!-- ================= MODALS & OVERLAYS ================= -->
+  <!-- ================= MODALS ================= -->
 
   <!-- Result Poster Canvas Modal -->
   <div id="posterModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-    <div class="glass-panel max-w-xl w-full rounded-2xl overflow-hidden shadow-2xl border border-slate-700 flex flex-col max-h-[90vh]">
-      <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
+    <div class="glass-panel max-w-xl w-full rounded-3xl overflow-hidden shadow-2xl border flex flex-col max-h-[90vh]">
+      <div class="p-4 border-b flex items-center justify-between">
         <div class="flex items-center gap-2">
           <i data-lucide="image" class="w-5 h-5 text-indigo-400"></i>
-          <h3 class="font-display font-bold text-lg text-white">Shareable Result Poster</h3>
+          <h3 class="font-display font-bold text-lg text-white">Download Result Poster</h3>
         </div>
-        <button onclick="app.closePosterModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800">
+        <button onclick="app.closePosterModal()" class="text-slate-400 hover:text-white p-1 rounded-xl hover:bg-slate-800">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
-      <div class="p-6 flex-1 overflow-y-auto flex flex-col items-center justify-center bg-slate-950/50">
-        <canvas id="resultPosterCanvas" width="800" height="1000" class="w-full max-w-sm rounded-xl shadow-2xl border border-slate-800"></canvas>
+      <div class="p-4 sm:p-6 flex-1 overflow-y-auto flex flex-col items-center justify-center bg-slate-950/20">
+        <canvas id="resultPosterCanvas" width="800" height="1000" class="w-full max-w-sm rounded-2xl shadow-2xl border"></canvas>
       </div>
-      <div class="p-4 border-t border-slate-800 bg-slate-900/80 flex flex-wrap items-center justify-between gap-3">
-        <span class="text-xs text-slate-400">Ready to share on WhatsApp, Instagram & Telegram</span>
-        <div class="flex items-center gap-2">
-          <button onclick="app.downloadPosterPNG()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl transition flex items-center gap-2 shadow-lg shadow-indigo-600/30">
-            <i data-lucide="download" class="w-4 h-4"></i> Download Poster (PNG)
-          </button>
-        </div>
+      <div class="p-4 border-t flex flex-wrap items-center justify-between gap-3">
+        <span class="text-xs text-slate-400">Share with family & friends on WhatsApp / Instagram</span>
+        <button onclick="app.downloadPosterPNG()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition flex items-center gap-2 shadow-lg shadow-indigo-600/30">
+          <i data-lucide="download" class="w-4 h-4"></i> Download Poster (PNG)
+        </button>
       </div>
     </div>
   </div>
 
   <!-- Announcements Modal -->
   <div id="announcementsModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-    <div class="glass-panel max-w-2xl w-full rounded-2xl overflow-hidden shadow-2xl border border-slate-700 flex flex-col max-h-[85vh]">
-      <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/80">
+    <div class="glass-panel max-w-2xl w-full rounded-3xl overflow-hidden shadow-2xl border flex flex-col max-h-[85vh]">
+      <div class="p-4 border-b flex items-center justify-between">
         <div class="flex items-center gap-2">
           <i data-lucide="bell" class="w-5 h-5 text-amber-400"></i>
-          <h3 class="font-display font-bold text-lg text-white">All Festival Announcements</h3>
+          <h3 class="font-display font-bold text-lg text-white">Live Announcements</h3>
         </div>
-        <button onclick="app.closeAnnouncementsModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800">
+        <button onclick="app.closeAnnouncementsModal()" class="text-slate-400 hover:text-white p-1 rounded-xl hover:bg-slate-800">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
-      <div id="announcementsModalList" class="p-6 space-y-4 overflow-y-auto flex-1">
-        <!-- Injected via JavaScript -->
-      </div>
+      <div id="announcementsModalList" class="p-6 space-y-4 overflow-y-auto flex-1"></div>
     </div>
   </div>
 
   <!-- Toast Notification Container -->
-  <div id="toastContainer" class="fixed bottom-6 right-6 z-50 space-y-3 pointer-events-none"></div>
+  <div id="toastContainer" class="fixed bottom-16 md:bottom-6 right-4 sm:right-6 z-50 space-y-2 pointer-events-none"></div>
 
   <!-- Main JavaScript Controller -->
   <script src="/app.js"></script>
