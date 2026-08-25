@@ -2149,8 +2149,8 @@ const app = {
         ${idx > 1 ? `<button type="button" onclick="this.closest('.winner-row').remove(); app.autoCalculatePoints();" class="absolute top-2 right-2 p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}
         <div class="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
           <div class="sm:col-span-1">
-            <label class="text-[10px] text-slate-400 uppercase font-bold">Chest No *</label>
-            <input name="chestNo" type="text" placeholder="e.g. 101" onblur="app.lookupStudentRow(this)" class="w-full p-2 rounded-xl glass-input text-xs font-mono font-bold" required>
+            <label class="text-[10px] text-slate-400 uppercase font-bold">Chest No / Name *</label>
+            <input name="chestNo" type="text" list="studentsList" placeholder="Type Chest # or Name" oninput="app.lookupStudentRow(this)" onchange="app.lookupStudentRow(this)" class="w-full p-2 rounded-xl glass-input text-xs font-mono font-bold" required autocomplete="off">
           </div>
           <div class="sm:col-span-1">
             <label class="text-[10px] text-slate-400 uppercase font-bold">Name</label>
@@ -2198,18 +2198,43 @@ const app = {
     }
   },
 
-  async lookupStudentRow(inputEl) {
-    const chestNo = inputEl.value.trim();
-    if (!chestNo) return;
-    try {
-      const res = await fetch(`${API_BASE}/students/${encodeURIComponent(chestNo)}`).then(r => r.json());
-      if (res.success && res.student) {
-        const row = inputEl.closest('.winner-row');
-        row.querySelector('input[name="studentName"]').value = res.student.name;
-        const houseSel = row.querySelector('select[name="houseId"]');
-        if (houseSel && res.student.house_id) houseSel.value = res.student.house_id;
-      }
-    } catch (e) {}
+  lookupStudentRow(inputEl) {
+    const val = inputEl.value.trim().toLowerCase();
+    if (!val || !this.state.allStudents) return;
+    
+    // Check if the input exactly matches a chest number OR name
+    const s = this.state.allStudents.find(st => st.chest_no.toLowerCase() === val || st.name.toLowerCase() === val);
+    
+    if (s) {
+       const row = inputEl.closest('.winner-row');
+       // Only replace input value if they typed the exact name, to turn it into chest no
+       if (s.name.toLowerCase() === val) {
+         inputEl.value = s.chest_no;
+       }
+       row.querySelector('input[name="studentName"]').value = s.name;
+       const houseSel = row.querySelector('select[name="houseId"]');
+       if (houseSel && s.house_id) houseSel.value = s.house_id;
+    }
+  },
+
+  updateStudentDatalist() {
+    this.autoCalculatePoints(); // Calculate points if format changed
+    const progSelect = document.getElementById('resProgId');
+    const datalist = document.getElementById('studentsList');
+    if (!progSelect || !datalist || !this.state.allStudents) return;
+
+    const selectedOption = progSelect.options[progSelect.selectedIndex];
+    if (!selectedOption || !selectedOption.value) {
+       datalist.innerHTML = '';
+       return;
+    }
+
+    const catId = parseInt(selectedOption.getAttribute('data-cat-id')) || 0;
+    
+    // Filter students by category ID
+    const validStudents = this.state.allStudents.filter(s => s.category_id === catId);
+    
+    datalist.innerHTML = validStudents.map(s => `<option value="${s.chest_no}">${s.name}</option>`).join('');
   },
 
   autoCalculatePoints() {
@@ -2242,12 +2267,14 @@ const app = {
     let progs = [];
     let results = [];
     try {
-      const [pRes, rRes] = await Promise.all([
+      const [pRes, rRes, sRes] = await Promise.all([
         fetch(`${API_BASE}/programmes`).then(r => r.json()),
-        fetch(`${API_BASE}/results`).then(r => r.json())
+        fetch(`${API_BASE}/results`).then(r => r.json()),
+        fetch(`${API_BASE}/students`).then(r => r.json())
       ]);
       if (pRes.success) progs = pRes.programmes;
       if (rRes.success) results = rRes.results;
+      if (sRes.success) this.state.allStudents = sRes.students;
     } catch (e) {}
 
     this.state.winnerRowCount = 3; // Start with 3 by default
@@ -2267,13 +2294,15 @@ const app = {
           <form onsubmit="app.submitResultDeclaration(event)" class="space-y-5 text-left">
             <div>
               <label class="block text-xs font-bold text-slate-300 uppercase mb-2">Select Event / Competition *</label>
-              <select id="resProgId" onchange="app.autoCalculatePoints()" class="w-full px-4 py-3 rounded-2xl glass-input text-xs sm:text-sm font-bold bg-slate-900" required>
+              <select id="resProgId" onchange="app.updateStudentDatalist()" class="w-full px-4 py-3 rounded-2xl glass-input text-xs sm:text-sm font-bold bg-slate-900" required>
                 <option value="">-- Choose an Event --</option>
                 ${progs.map(p => `
-                  <option value="${p.id}" data-format="${p.format}" data-category="${p.category_name}">${p.code} — ${p.name} (${p.category_name}) [Status: ${p.status}]</option>
+                  <option value="${p.id}" data-format="${p.format}" data-category="${p.category_name}" data-cat-id="${p.category_id}">${p.code} — ${p.name} (${p.category_name}) [Status: ${p.status}]</option>
                 `).join('')}
               </select>
             </div>
+
+            <datalist id="studentsList"></datalist>
 
             <div id="winnersContainer" class="space-y-3">
               ${this.getWinnerRowHtml(1)}
@@ -2306,7 +2335,6 @@ const app = {
       </div>
     `;
 
-    // Fix grade selections for initial rows 2 and 3 so they don't all default to A grade
     setTimeout(() => {
       const w2Grade = document.querySelector('#winner-row-2 .winner-grade');
       const w3Grade = document.querySelector('#winner-row-3 .winner-grade');
@@ -2328,20 +2356,43 @@ const app = {
       return;
     }
 
+    // Validate students match programme category!
+    const progSelect = document.getElementById('resProgId');
+    const selectedOption = progSelect.options[progSelect.selectedIndex];
+    const catId = parseInt(selectedOption.getAttribute('data-cat-id')) || 0;
+    
     const winners = [];
+    let isValid = true;
+    let errorMsg = '';
+
     document.querySelectorAll('.winner-row').forEach(row => {
       const chestNo = row.querySelector('input[name="chestNo"]').value.trim();
       if (!chestNo) return;
       
+      const stName = row.querySelector('input[name="studentName"]').value.trim();
+      
+      // Strict category check!
+      const studentObj = this.state.allStudents ? this.state.allStudents.find(s => s.chest_no === chestNo) : null;
+      if (studentObj && studentObj.category_id !== catId && catId !== 0) {
+          isValid = false;
+          errorMsg = `${studentObj.name} (Chest: ${chestNo}) does not belong to the selected event's category!`;
+          return;
+      }
+
       winners.push({
         position: parseInt(row.querySelector('.winner-rank').value) || 0,
         chest_no: chestNo,
-        student_name: row.querySelector('input[name="studentName"]').value.trim(),
+        student_name: stName,
         house_id: parseInt(row.querySelector('select[name="houseId"]').value),
         grade: row.querySelector('.winner-grade').value,
         points_awarded: parseInt(row.querySelector('input[name="points"]').value) || 0
       });
     });
+
+    if (!isValid) {
+      this.showToast(errorMsg, 'error');
+      return;
+    }
 
     if (winners.length === 0) {
       this.showToast('Please add at least one participant', 'error');
