@@ -2536,37 +2536,61 @@ const app = {
         </div>
 
         <div class="glass-panel p-6 sm:p-8 rounded-3xl border shadow-xl">
-          <div class="flex items-center justify-between border-b pb-4 mb-4">
-            <h2 class="font-display font-black text-lg text-white">Published Results</h2>
-            <span class="text-xs text-slate-400">${results.length} Results</span>
-          </div>
-          <div class="relative w-full mb-4">
-            <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-            <input type="text" id="resSearch" onkeyup="app.filterAdminTable('resSearch', 'resTable')" placeholder="Search results by event, category, winner name..." class="w-full pl-10 pr-4 py-2.5 rounded-2xl glass-input text-xs font-bold">
+          <div class="flex flex-col sm:flex-row items-center justify-between border-b border-slate-700/50 pb-4 mb-4 gap-4">
+            <h2 class="font-display font-black text-lg text-white flex items-center gap-2">
+              <i data-lucide="list-checks" class="w-5 h-5 text-indigo-400"></i> Manage Declared Results
+            </h2>
+            <span class="text-xs font-bold text-slate-400 bg-slate-800 px-3 py-1 rounded-full">${results.length} Total</span>
           </div>
 
-          <div class="overflow-x-auto">
+          <div class="relative w-full mb-6">
+            <i data-lucide="search" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="resSearch" onkeyup="app.filterAdminTable('resSearch', 'resTable')" placeholder="Search results by event, category, winner name..." class="w-full pl-11 pr-4 py-3 rounded-2xl glass-input text-sm font-bold">
+          </div>
+
+          <div class="overflow-x-auto rounded-2xl border border-slate-700/50">
             <table id="resTable" class="w-full text-left text-xs">
-              <thead class="text-slate-400 uppercase border-b">
+              <thead class="bg-slate-800/50 text-slate-400 uppercase">
                 <tr>
-                  <th class="py-3 px-4">Event</th>
-                  <th class="py-3 px-4">Category</th>
-                  <th class="py-3 px-4">1st Place</th>
-                  <th class="py-3 px-4 text-right">Actions</th>
+                  <th class="py-4 px-5">Event</th>
+                  <th class="py-4 px-5">Status</th>
+                  <th class="py-4 px-5">Winners Summary</th>
+                  <th class="py-4 px-5 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody class="divide-y">
-                ${results.length === 0 ? `<tr><td colspan="4" class="py-4 text-center text-slate-500">No results published yet</td></tr>` : results.map(r => `
-                  <tr class="hover:bg-slate-800/20 transition">
-                    <td class="py-3 px-4 font-bold text-white">${r.programme_code} - ${this.escapeHtml(r.programme_name)}</td>
-                    <td class="py-3 px-4 text-slate-400">${r.category_name}</td>
-                    <td class="py-3 px-4 text-amber-400 font-bold">${r.winners && r.winners.find(w => w.position === 1) ? this.escapeHtml(r.winners.find(w => w.position === 1).student_name) : 'None'}</td>
-                    <td class="py-3 px-4 text-right">
-                      <button onclick='app.editResult(${JSON.stringify(r).replace(/'/g, "&#39;")})' class="p-1.5 rounded hover:bg-slate-800 text-sky-400 mr-2"><i data-lucide="edit-2" class="w-3.5 h-3.5"></i></button>
-                      <button onclick="app.deleteResult(${r.result_id})" class="p-1.5 rounded hover:bg-slate-800 text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+              <tbody class="divide-y divide-slate-700/50">
+                ${results.length === 0 ? `<tr><td colspan="4" class="py-8 text-center text-slate-500 font-semibold">No results declared yet</td></tr>` : results.map(r => {
+                  const isPublished = r.published === 1;
+                  const firstPlace = r.winners && r.winners.find(w => w.position === 1);
+                  return `
+                  <tr class="hover:bg-slate-800/30 transition">
+                    <td class="py-4 px-5">
+                      <div class="font-bold text-white text-sm">${r.programme_code} - ${this.escapeHtml(r.programme_name)}</div>
+                      <div class="text-[10px] uppercase text-slate-400 font-bold mt-1 tracking-wider">${r.category_name}</div>
+                    </td>
+                    <td class="py-4 px-5">
+                      ${isPublished 
+                        ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase rounded-full border border-emerald-500/20"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Published</span>`
+                        : `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/10 text-amber-500 text-[10px] font-black uppercase rounded-full border border-amber-500/20"><i data-lucide="eye-off" class="w-3 h-3"></i> Draft</span>`
+                      }
+                    </td>
+                    <td class="py-4 px-5">
+                      <div class="flex items-center gap-2">
+                        <i data-lucide="award" class="w-4 h-4 text-amber-400"></i>
+                        <span class="font-bold text-slate-200">${firstPlace ? this.escapeHtml(firstPlace.student_name) : 'No 1st Place'}</span>
+                        <span class="text-slate-500 text-[10px]">+ ${r.winners ? (r.winners.length - 1 > 0 ? r.winners.length - 1 : 0) : 0} others</span>
+                      </div>
+                    </td>
+                    <td class="py-4 px-5 text-right whitespace-nowrap">
+                      <button onclick='app.editResult(${JSON.stringify(r).replace(/'/g, "&#39;")})' class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 text-xs font-bold mr-2 transition">
+                        <i data-lucide="edit-2" class="w-3.5 h-3.5"></i> Edit
+                      </button>
+                      <button onclick="app.deleteResult(${r.result_id})" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold transition">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete
+                      </button>
                     </td>
                   </tr>
-                `).join('')}
+                `}).join('')}
               </tbody>
             </table>
           </div>
