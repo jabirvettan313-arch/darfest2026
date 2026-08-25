@@ -192,7 +192,7 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
                         }
 
                 cursor.execute('''
-                    SELECT s.id, s.chest_no, s.name, s.house_id, h.name as house_name, h.color as house_color,
+                    SELECT s.id, s.chest_no, s.name, s.photo_url, s.house_id, h.name as house_name, h.color as house_color,
                            SUM(rw.points_awarded) as total_points,
                            COUNT(rw.id) as prize_count
                     FROM result_winners rw
@@ -349,7 +349,7 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
 
                 # Top Individual Champions (Top Scorers)
                 cursor.execute('''
-                    SELECT s.id, s.chest_no, s.name, s.house_id, h.name as house_name, h.color as house_color,
+                    SELECT s.id, s.chest_no, s.name, s.photo_url, s.house_id, h.name as house_name, h.color as house_color,
                            SUM(rw.points_awarded) as total_points,
                            COUNT(rw.id) as prize_count
                     FROM result_winners rw
@@ -1045,12 +1045,13 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
                 name = data.get('name', '').strip()
                 house_id = data.get('house_id')
                 category_id = data.get('category_id')
+                photo_url = data.get('photo_url', '')
 
                 cursor.execute('''
                     UPDATE students 
-                    SET chest_no = ?, name = ?, house_id = ?, category_id = ?
+                    SET chest_no = ?, name = ?, house_id = ?, category_id = ?, photo_url = ?
                     WHERE id = ?
-                ''', (chest_no, name, house_id, category_id, st_id))
+                ''', (chest_no, name, house_id, category_id, photo_url, st_id))
                 conn.commit()
                 self.send_json({"success": True, "message": "Student updated successfully"})
                 return

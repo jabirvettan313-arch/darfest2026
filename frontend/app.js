@@ -367,6 +367,51 @@ const app = {
       </section>
 
       <!-- 4. View More Results -->
+      <!-- 4. Individual Champions (Top Scorers) -->
+      <section class="mb-12 space-y-6 pt-6 border-t border-slate-800">
+        <div class="text-center">
+          <h2 class="font-display font-black text-xl sm:text-2xl text-white flex items-center justify-center gap-2">
+            <i data-lucide="star" class="w-6 h-6 text-amber-400"></i> Individual Champions
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-400 mt-1">Top Performing Students Overall</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          ${individualChampions.length > 0 ? individualChampions.map((c, idx) => `
+            <div class="p-5 rounded-3xl bg-slate-900/60 border border-slate-800 text-center space-y-3 relative hover:-translate-y-1 transition duration-300">
+              ${idx === 0 ? '<div class="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center text-white font-black shadow-lg shadow-amber-500/30 text-xs">1st</div>' : ''}
+              ${idx === 1 ? '<div class="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-slate-400 flex items-center justify-center text-white font-black shadow-lg shadow-slate-400/30 text-xs">2nd</div>' : ''}
+              ${idx === 2 ? '<div class="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-amber-700 flex items-center justify-center text-white font-black shadow-lg shadow-amber-700/30 text-xs">3rd</div>' : ''}
+              
+              <div class="w-20 h-20 mx-auto rounded-full bg-slate-800 border-2 overflow-hidden shadow-inner flex items-center justify-center" style="border-color: ${c.house_color || '#334155'}">
+                ${c.photo_url ? `<img src="${c.photo_url}" class="w-full h-full object-cover">` : `<i data-lucide="user" class="w-8 h-8 text-slate-500"></i>`}
+              </div>
+              
+              <div>
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Chest No. ${c.chest_no}</div>
+                <div class="font-display font-black text-lg text-white leading-tight">${this.escapeHtml(c.name)}</div>
+                <div class="text-xs font-bold mt-1 flex items-center justify-center gap-1.5" style="color: ${c.house_color}">
+                  <span class="w-2 h-2 rounded-full" style="background-color: ${c.house_color}"></span>
+                  ${this.escapeHtml(c.house_name)}
+                </div>
+              </div>
+              
+              <div class="flex items-center justify-center gap-4 pt-3 border-t border-slate-800">
+                <div class="text-center">
+                  <div class="text-[10px] text-slate-400 uppercase font-bold">Points</div>
+                  <div class="font-black text-amber-400 font-mono">${c.total_points}</div>
+                </div>
+                <div class="text-center">
+                  <div class="text-[10px] text-slate-400 uppercase font-bold">Prizes</div>
+                  <div class="font-black text-white font-mono">${c.prize_count}</div>
+                </div>
+              </div>
+            </div>
+          `).join('') : `
+            <div class="col-span-3 text-center text-slate-500 text-xs py-4">Top performers will be updated as results are declared.</div>
+          `}
+        </div>
+      </section>
       <section class="mb-10 text-center pb-8">
         <a href="#/results" class="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-black text-sm shadow-xl shadow-indigo-600/30 transition hover:scale-105">
           <span>View More Results</span>
@@ -1474,18 +1519,53 @@ const app = {
     `;
   },
 
+  async uploadStudentPhoto(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch(`${API_BASE}/upload`, {
+        method: 'POST',
+        headers: { 'X-Admin-Pin': this.state.adminToken },
+        body: formData
+      }).then(r => r.json());
+
+      if (res.success && res.url) {
+        document.getElementById('stPhotoUrl').value = res.url;
+        document.getElementById('stPhotoPreview').src = res.url;
+        document.getElementById('stPhotoPreview').classList.remove('hidden');
+        this.showToast('Photo uploaded!', 'success');
+      } else {
+        this.showToast(res.error || 'Upload failed', 'error');
+      }
+    } catch (e) {
+      this.showToast('Upload error', 'error');
+    }
+  },
+
   openAddStudentModal() {
     const modal = document.getElementById('studentFormModal');
     if (!modal) return;
 
     modal.innerHTML = `
-      <div class="glass-panel max-w-md w-full rounded-3xl overflow-hidden shadow-2xl border p-6 space-y-4">
+      <div class="glass-panel max-w-md w-full rounded-3xl overflow-hidden shadow-2xl border p-6 space-y-4 max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between border-b pb-3">
           <h3 class="font-display font-bold text-lg text-white">Add New Student</h3>
           <button onclick="app.closeStudentModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
         </div>
 
         <form onsubmit="app.saveStudent(event)" class="space-y-4 text-left">
+          <div class="flex gap-4 items-center mb-2">
+            <img id="stPhotoPreview" src="" class="w-16 h-16 rounded-2xl object-cover bg-slate-800 hidden border border-slate-700">
+            <div class="flex-1">
+              <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Photo</label>
+              <input type="file" accept="image/*" onchange="app.uploadStudentPhoto(this)" class="w-full text-xs text-slate-400 file:mr-4 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500">
+              <input type="hidden" id="stPhotoUrl" value="">
+            </div>
+          </div>
           <div>
             <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Chest Number *</label>
             <input id="stChestNo" type="text" placeholder="e.g. 111" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-mono font-bold" required>
@@ -1533,13 +1613,21 @@ const app = {
     const s = res.student;
 
     modal.innerHTML = `
-      <div class="glass-panel max-w-md w-full rounded-3xl overflow-hidden shadow-2xl border p-6 space-y-4">
+      <div class="glass-panel max-w-md w-full rounded-3xl overflow-hidden shadow-2xl border p-6 space-y-4 max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between border-b pb-3">
           <h3 class="font-display font-bold text-lg text-white">Edit Student #${s.chest_no}</h3>
           <button onclick="app.closeStudentModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
         </div>
 
         <form onsubmit="app.updateStudent(event, ${s.id})" class="space-y-4 text-left">
+          <div class="flex gap-4 items-center mb-2">
+            <img id="stPhotoPreview" src="${s.photo_url || ''}" class="w-16 h-16 rounded-2xl object-cover bg-slate-800 border border-slate-700 ${s.photo_url ? '' : 'hidden'}">
+            <div class="flex-1">
+              <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Photo</label>
+              <input type="file" accept="image/*" onchange="app.uploadStudentPhoto(this)" class="w-full text-xs text-slate-400 file:mr-4 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500">
+              <input type="hidden" id="stPhotoUrl" value="${s.photo_url || ''}">
+            </div>
+          </div>
           <div>
             <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Chest Number *</label>
             <input id="stChestNo" type="text" value="${s.chest_no}" class="w-full px-3.5 py-2.5 rounded-2xl glass-input text-xs font-mono font-bold" required>
@@ -1573,7 +1661,6 @@ const app = {
     modal.classList.remove('hidden');
     lucide.createIcons();
   },
-
   closeStudentModal() {
     const modal = document.getElementById('studentFormModal');
     if (modal) modal.classList.add('hidden');
@@ -1586,7 +1673,8 @@ const app = {
       name: document.getElementById('stName').value.trim(),
       house_id: parseInt(document.getElementById('stHouseId').value),
       category_id: parseInt(document.getElementById('stCategoryId').value),
-      phone: document.getElementById('stPhone').value.trim()
+      phone: document.getElementById('stPhone') ? document.getElementById('stPhone').value.trim() : '',
+      photo_url: document.getElementById('stPhotoUrl') ? document.getElementById('stPhotoUrl').value : ''
     };
 
     try {
@@ -1613,6 +1701,7 @@ const app = {
       name: document.getElementById('stName').value.trim(),
       house_id: parseInt(document.getElementById('stHouseId').value),
       category_id: parseInt(document.getElementById('stCategoryId').value),
+      photo_url: document.getElementById('stPhotoUrl') ? document.getElementById('stPhotoUrl').value : ''
     };
 
     try {
@@ -1623,7 +1712,7 @@ const app = {
       }).then(r => r.json());
 
       if (res.success) {
-        this.showToast('Student updated successfully', 'success');
+        this.showToast('Student updated', 'success');
         this.closeStudentModal();
         this.renderAdminTabContent();
       }
