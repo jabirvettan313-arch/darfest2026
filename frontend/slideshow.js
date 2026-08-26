@@ -258,10 +258,140 @@ app.renderSlideView = async function() {
         }, 10000); // 10 seconds per slide
     }
     
+
+
+    // --- POPUP LOGIC FOR NEW RESULTS ---
+    if (app.lastSeenResultId === undefined && recentResults.length > 0) {
+        app.lastSeenResultId = recentResults[0].result_id;
+    }
+    
+    if (app.pollInterval) clearInterval(app.pollInterval);
+    app.popupQueue = app.popupQueue || [];
+    
+    app.showResultPopup = function(result) {
+        // Pause main slideshow
+        if (app.slideInterval) clearInterval(app.slideInterval);
+        
+        const popupHtml = `
+            <div id="newResultPopup" class="fixed inset-0 z-[100] flex flex-col items-center justify-center opacity-0 transition-opacity duration-1000 bg-slate-950 p-8">
+                <div class="absolute inset-0 bg-gradient-to-b from-indigo-900/40 to-slate-950"></div>
+                <div class="relative z-10 flex flex-col items-center w-full max-w-5xl scale-95 transition-transform duration-1000" id="newResultPopupContent">
+                    <span class="px-5 py-2 rounded-full bg-emerald-500/20 text-emerald-400 font-black text-sm tracking-widest uppercase mb-6 animate-pulse border border-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.5)]">🚨 New Result Just Announced 🚨</span>
+                    <h2 class="font-display font-black text-5xl sm:text-7xl text-white mb-4 text-center leading-tight drop-shadow-2xl">${result.programme_name}</h2>
+                    <p class="text-xl text-slate-400 uppercase font-bold mb-16 tracking-widest">${result.category_name} &bull; ${result.format}</p>
+                    
+                    <div class="flex flex-wrap justify-center gap-8 w-full items-end">
+                        ${result.winners.slice(0, 3).map((w, idx) => {
+                            const isFirst = idx === 0;
+                            const height = isFirst ? 'h-64' : 'h-52';
+                            const scale = isFirst ? 'scale-110 z-20' : 'scale-100 z-10 opacity-90';
+                            const badgeColor = isFirst ? 'bg-yellow-400 text-yellow-950' : (idx === 1 ? 'bg-slate-300 text-slate-800' : 'bg-amber-700 text-amber-100');
+                            const rankText = isFirst ? '1st' : (idx === 1 ? '2nd' : '3rd');
+                            
+                            return `
+                                <div class="flex flex-col items-center ${scale} transition-all">
+                                    <div class="relative mb-4">
+                                        <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-slate-700 bg-slate-800 shadow-2xl">
+                                            <img src="${w.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(w.student_name)}&background=1e293b&color=cbd5e1&size=128`}" class="w-full h-full object-cover">
+                                        </div>
+                                        <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 ${badgeColor} px-5 py-1.5 rounded-full font-black text-sm shadow-xl border border-black/10">
+                                            ${rankText}
+                                        </div>
+                                    </div>
+                                    <div class="bg-slate-900 border border-slate-700/50 rounded-3xl p-6 flex flex-col items-center w-64 ${height} justify-start text-center relative overflow-hidden shadow-2xl">
+                                        <div class="absolute top-0 left-0 w-full h-2" style="background-color: ${w.house_color || '#475569'}"></div>
+                                        <h4 class="text-2xl font-black text-white mt-2 leading-tight">${w.student_name}</h4>
+                                        <div class="mt-4 px-3 py-1.5 rounded-xl bg-slate-800/50 text-sm font-bold" style="color: ${w.house_color || '#94a3b8'}">
+                                            ${w.house_name || 'N/A'}
+                                        </div>
+                                        <div class="mt-auto flex flex-col items-center">
+                                            <span class="text-xl font-bold text-slate-400">${w.grade} Grade</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', popupHtml);
+        const popup = document.getElementById('newResultPopup');
+        const popupContent = document.getElementById('newResultPopupContent');
+        
+        // Animate in
+        setTimeout(() => {
+            popup.classList.remove('opacity-0');
+            popup.classList.add('opacity-100');
+            popupContent.classList.remove('scale-95');
+            popupContent.classList.add('scale-100');
+        }, 100);
+        
+        // Animate out after 10 seconds
+        setTimeout(() => {
+            popup.classList.remove('opacity-100');
+            popup.classList.add('opacity-0');
+            popupContent.classList.remove('scale-100');
+            popupContent.classList.add('scale-95');
+            
+            setTimeout(() => {
+                popup.remove();
+                
+                // Check if more in queue
+                if (app.popupQueue.length > 0) {
+                    app.showResultPopup(app.popupQueue.shift());
+                } else {
+                    // Resume slideshow gracefully by reloading view with fresh data
+                    app.renderSlideView();
+                }
+            }, 1000); // Wait for fade out
+        }, 10000);
+    };
+
+    app.pollInterval = setInterval(async () => {
+        // If a popup is already showing, wait. The queue will be processed when it finishes.
+        if (document.getElementById('newResultPopup')) return;
+        
+        try {
+            const rRes = await fetch('/api/results').then(r=>r.json());
+            if(rRes.success && rRes.results.length > 0) {
+                const latest = rRes.results;
+                const newResults = [];
+                for(let r of latest) {
+                    if (app.lastSeenResultId !== undefined && r.result_id > app.lastSeenResultId) {
+                        newResults.push(r);
+                    } else if (app.lastSeenResultId === undefined) {
+                        break;
+                    } else if (r.result_id <= app.lastSeenResultId) {
+                        break;
+                    }
+                }
+                
+                if (newResults.length > 0) {
+                    // Queue them in reverse (oldest first) so they display in order of announcement
+                    newResults.reverse().forEach(nr => app.popupQueue.push(nr));
+                    app.lastSeenResultId = Math.max(...newResults.map(r => r.result_id), app.lastSeenResultId);
+                }
+                
+                // Show popup if queue has items and none showing currently
+                if (app.popupQueue.length > 0 && !document.getElementById('newResultPopup')) {
+                    app.showResultPopup(app.popupQueue.shift());
+                }
+            }
+        } catch(e) {
+            console.error(e);
+        }
+    }, 5000); // Check every 5 seconds
+    // --- END POPUP LOGIC ---
+
     // Clean up interval if hash changes
+
     const cleanup = () => {
         if(window.location.hash !== '#/slide') {
             if(app.slideInterval) clearInterval(app.slideInterval);
+            if(app.pollInterval) clearInterval(app.pollInterval);
+            const popup = document.getElementById('newResultPopup'); if(popup) popup.remove();
             document.querySelector('nav')?.classList.remove('hidden');
             document.querySelector('footer')?.classList.remove('hidden');
             document.body.classList.remove('overflow-hidden');
