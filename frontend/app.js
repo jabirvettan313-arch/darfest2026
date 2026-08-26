@@ -144,6 +144,8 @@ const app = {
     } else if (hash.startsWith('#/contact')) {
       this.highlightNav('contact', 'text-emerald-400');
       this.renderContactView();
+    } else if (hash.startsWith('#/slide')) {
+      this.renderSlideView();
     } else {
       this.highlightNav('home', 'text-indigo-400');
       this.renderHomeView();

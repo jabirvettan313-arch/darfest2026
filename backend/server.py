@@ -389,7 +389,9 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
                 for row in stu_cat_rows:
                     cid = row['category_id']
                     if cid not in student_category_champions:
-                        student_category_champions[cid] = dict(row)
+                        student_category_champions[cid] = []
+                    if len(student_category_champions[cid]) < 3:
+                        student_category_champions[cid].append(dict(row))
                 # Top Individual Champions (Top Scorers)
                 cursor.execute('''
                     SELECT s.id, s.chest_no, s.name, s.photo_url, s.house_id, h.name as house_name, h.color as house_color,
