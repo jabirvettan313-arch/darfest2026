@@ -139,11 +139,11 @@ app.renderSlideView = async function() {
                             const badgeColor = isFirst ? 'bg-yellow-400 text-yellow-950' : (idx === 1 ? 'bg-slate-300 text-slate-800' : 'bg-amber-700 text-amber-100');
                             const rankText = isFirst ? '1st' : (idx === 1 ? '2nd' : '3rd');
                             
-                            return \`
+                            return `
                                 <div class="flex flex-col items-center ${scale} transition-all">
                                     <div class="relative mb-4">
                                         <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-slate-700 bg-slate-800 shadow-2xl">
-                                            <img src="${w.photo_url || \`https://ui-avatars.com/api/?name=${encodeURIComponent(w.student_name)}&background=1e293b&color=cbd5e1&size=128\`}" class="w-full h-full object-cover">
+                                            <img src="${w.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(w.student_name)}&background=1e293b&color=cbd5e1&size=128`}" class="w-full h-full object-cover">
                                         </div>
                                         <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 ${badgeColor} px-5 py-1.5 rounded-full font-black text-sm shadow-xl border border-black/10">
                                             ${rankText}
@@ -160,7 +160,7 @@ app.renderSlideView = async function() {
                                         </div>
                                     </div>
                                 </div>
-                            \`;
+                            `;
                         }).join('')}
                     </div>
                 </div>
