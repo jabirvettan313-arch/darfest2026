@@ -199,9 +199,7 @@ def seed_default_data(cursor, conn):
     # Default Houses
     houses = [
         ('Ruby Royals', 'RUBY', '#ef4444', 'bg-red-500', 'from-red-500 to-rose-600', 'gem'),
-        ('Sapphire Storm', 'SAPPHIRE', '#3b82f6', 'bg-blue-500', 'from-blue-500 to-indigo-600', 'shield'),
-        ('Emerald Eagles', 'EMERALD', '#10b981', 'bg-emerald-500', 'from-emerald-500 to-teal-600', 'sparkles'),
-        ('Topaz Titans', 'TOPAZ', '#f59e0b', 'bg-amber-500', 'from-amber-500 to-yellow-600', 'zap')
+        ('Emerald Eagles', 'EMERALD', '#10b981', 'bg-emerald-500', 'from-emerald-500 to-teal-600', 'sparkles')
     ]
     for h in houses:
         cursor.execute('''
