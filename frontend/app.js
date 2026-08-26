@@ -2204,6 +2204,11 @@ const app = {
                       <button onclick="app.deleteProgramme(${p.id})" class="p-1.5 rounded hover:bg-slate-800 text-slate-400 hover:text-red-400">
                         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                       </button>
+                      <button onclick='app.openResultModalForEvent(${p.id})' class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl ${p.result_id ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-500'} text-xs font-bold transition shadow-sm mr-1">
+                        <i data-lucide="${p.result_id ? 'edit-2' : 'award'}" class="w-3.5 h-3.5"></i>
+                        ${p.result_id ? 'Edit Result' : 'Declare'}
+                      </button>
+                      ${p.result_id ? `<button onclick='app.deleteResult(${p.result_id});' class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold transition shadow-sm' title="Delete Result"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i>Delete</button>` : ''}
                     </td>
                   </tr>
                 `).join('')}
@@ -2213,7 +2218,9 @@ const app = {
         </div>
       </div>
       <div id="programmeFormModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4"></div>
+      <div id="eventResultModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4"></div>
     `;
+    lucide.createIcons();
   },
 
   async openResultModalForEvent(progId) {
