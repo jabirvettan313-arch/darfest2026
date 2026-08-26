@@ -247,11 +247,9 @@ app.renderSlideView = async function() {
             // Move to next
             currentSlide = (currentSlide + 1) % slides.length;
             
-            // If we looped back to 0, optionally refresh the page to get fresh data
-            if(currentSlide === 0) {
-                // To keep it seamless, we just fetch data silently or do a hard refresh.
-                // A hard refresh is easiest for completely fresh data without re-wiring the dom.
-                window.location.reload();
+            // If we looped back to 0, refresh the data by re-rendering the view silently
+            if (currentSlide === 0) {
+                app.renderSlideView();
             } else {
                 // Fade in next
                 slides[currentSlide].classList.remove('opacity-0');
