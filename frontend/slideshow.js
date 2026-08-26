@@ -120,10 +120,59 @@ app.renderSlideView = async function() {
         });
     }
 
-    // Slides 4+: Latest Results (2 slides, 4 per slide)
+    // Highlight Slide: Very Latest Single Result
     if (recentResults.length > 0) {
-        for (let i = 0; i < recentResults.length && i < 8; i += 4) {
-            const chunk = recentResults.slice(i, i + 4);
+        const topResult = recentResults[0];
+        slidesHtml.push(`
+            <div class="slide absolute inset-0 flex flex-col items-center justify-center opacity-0 transition-opacity duration-1000 bg-slate-950 p-8 z-10">
+                <div class="absolute inset-0 bg-gradient-to-b from-indigo-900/30 to-slate-950"></div>
+                <div class="relative z-10 flex flex-col items-center w-full max-w-5xl">
+                    <span class="px-4 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-sm tracking-widest uppercase mb-6 animate-pulse border border-emerald-500/30">Just Announced</span>
+                    <h2 class="font-display font-black text-5xl sm:text-7xl text-white mb-4 text-center leading-tight drop-shadow-2xl">${topResult.programme_name}</h2>
+                    <p class="text-xl text-slate-400 uppercase font-bold mb-16 tracking-widest">${topResult.category_name} &bull; ${topResult.format}</p>
+                    
+                    <div class="flex flex-wrap justify-center gap-8 w-full items-end">
+                        ${topResult.winners.slice(0, 3).map((w, idx) => {
+                            const isFirst = idx === 0;
+                            const height = isFirst ? 'h-64' : 'h-52';
+                            const scale = isFirst ? 'scale-110 z-20' : 'scale-100 z-10 opacity-90';
+                            const badgeColor = isFirst ? 'bg-yellow-400 text-yellow-950' : (idx === 1 ? 'bg-slate-300 text-slate-800' : 'bg-amber-700 text-amber-100');
+                            const rankText = isFirst ? '1st' : (idx === 1 ? '2nd' : '3rd');
+                            
+                            return \`
+                                <div class="flex flex-col items-center ${scale} transition-all">
+                                    <div class="relative mb-4">
+                                        <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-slate-700 bg-slate-800 shadow-2xl">
+                                            <img src="${w.photo_url || \`https://ui-avatars.com/api/?name=${encodeURIComponent(w.student_name)}&background=1e293b&color=cbd5e1&size=128\`}" class="w-full h-full object-cover">
+                                        </div>
+                                        <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 ${badgeColor} px-5 py-1.5 rounded-full font-black text-sm shadow-xl border border-black/10">
+                                            ${rankText}
+                                        </div>
+                                    </div>
+                                    <div class="bg-slate-900 border border-slate-700/50 rounded-3xl p-6 flex flex-col items-center w-64 ${height} justify-start text-center relative overflow-hidden shadow-2xl">
+                                        <div class="absolute top-0 left-0 w-full h-2" style="background-color: ${w.house_color || '#475569'}"></div>
+                                        <h4 class="text-2xl font-black text-white mt-2 leading-tight">${w.student_name}</h4>
+                                        <div class="mt-4 px-3 py-1.5 rounded-xl bg-slate-800/50 text-sm font-bold" style="color: ${w.house_color || '#94a3b8'}">
+                                            ${w.house_name || 'N/A'}
+                                        </div>
+                                        <div class="mt-auto flex flex-col items-center">
+                                            <span class="text-xl font-bold text-slate-400">${w.grade} Grade</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            \`;
+                        }).join('')}
+                    </div>
+                </div>
+            </div>
+        `);
+    }
+
+    // After that, Next 2 Slides: Other Recent Results (4 per slide)
+    if (recentResults.length > 1) {
+        const otherResults = recentResults.slice(1, 9);
+        for (let i = 0; i < otherResults.length && i < 8; i += 4) {
+            const chunk = otherResults.slice(i, i + 4);
             slidesHtml.push(`
                 <div class="slide absolute inset-0 flex flex-col items-center justify-center opacity-0 transition-opacity duration-1000 bg-slate-950 p-8 z-10">
                     <h2 class="font-display font-black text-4xl sm:text-5xl text-white mb-10 drop-shadow-lg"><i data-lucide="zap" class="w-10 h-10 inline-block text-blue-400 mr-4"></i>Latest Results</h2>
