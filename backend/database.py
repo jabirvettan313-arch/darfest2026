@@ -256,3 +256,32 @@ def seed_default_data(cursor, conn):
         ''', s)
 
     conn.commit()
+    recalculate_house_points_conn(conn)
+
+def recalculate_house_points():
+    conn = get_db()
+    recalculate_house_points_conn(conn)
+    conn.close()
+
+def recalculate_house_points_conn(conn):
+    cursor = conn.cursor()
+    cursor.execute('UPDATE houses SET points = 0')
+    
+    cursor.execute('''
+        SELECT rw.house_id, SUM(rw.points_awarded) as total_points
+        FROM result_winners rw
+        JOIN results r ON rw.result_id = r.id
+        WHERE r.published = 1
+        GROUP BY rw.house_id
+    ''')
+    rows = cursor.fetchall()
+    for row in rows:
+        house_id = row['house_id'] if isinstance(row, sqlite3.Row) else row[0]
+        points = row['total_points'] if isinstance(row, sqlite3.Row) else row[1]
+        cursor.execute('UPDATE houses SET points = ? WHERE id = ?', (points or 0, house_id))
+    
+    conn.commit()
+
+if __name__ == '__main__':
+    init_db()
+    print("Database initialized and synced with .env successfully!")
