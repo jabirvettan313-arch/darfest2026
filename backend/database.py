@@ -235,17 +235,19 @@ def seed_default_data(cursor, conn):
         ''', p)
 
     # Seed Sample Students
+    # Seed Sample Students
     students = [
-        ('101', 'Aadhya Sharma', 1, 3, '9876543210'),
-        ('102', 'Rohan Varma', 2, 3, '9876543211'),
-        ('103', 'Fathima Nihala', 3, 3, '9876543212'),
-        ('104', 'Devanand K', 4, 3, '9876543213'),
-        ('105', 'Ananya Menon', 1, 2, '9876543214'),
-        ('106', 'Bilal Ahmed', 2, 2, '9876543215'),
-        ('107', 'Diya Rajesh', 3, 1, '9876543216'),
-        ('108', 'Gautham Krishna', 4, 1, '9876543217'),
-        ('109', 'Naveen Joseph', 2, 4, '9876543218'),
-        ('110', 'Meera Nair', 3, 4, '9876543219')
+        ('101', 'Shammas P', 1, 2, ''),
+        ('102', 'Sinan M', 3, 2, ''),
+        ('103', 'Adnan', 1, 2, ''),
+        ('104', 'Nasib', 3, 2, ''),
+        ('105', 'Hadi', 1, 2, ''),
+        ('106', 'Razan', 3, 2, ''),
+        ('201', 'Shammas T', 1, 3, ''),
+        ('202', 'Sehal', 3, 3, ''),
+        ('203', 'Nasif', 1, 3, ''),
+        ('204', 'Hamis', 3, 3, ''),
+        ('205', 'Ziyan', 1, 3, '')
     ]
     for s in students:
         cursor.execute('''
@@ -253,85 +255,4 @@ def seed_default_data(cursor, conn):
             VALUES (?, ?, ?, ?, ?)
         ''', s)
 
-    # Seed Sample Results
-    cursor.execute('''
-        INSERT INTO results (programme_id, published, notes, telegram_sent)
-        VALUES (1, 1, 'Official result verified by the judging panel', 1)
-    ''')
-    res1_id = cursor.lastrowid
-    cursor.execute('''
-        INSERT INTO result_winners (result_id, position, student_id, chest_no, student_name, house_id, grade, points_awarded)
-        VALUES 
-        (?, 1, 1, '101', 'Aadhya Sharma', 1, 'A', 10),
-        (?, 2, 2, '102', 'Rohan Varma', 2, 'A', 8),
-        (?, 3, 3, '103', 'Fathima Nihala', 3, 'B', 4)
-    ''', (res1_id, res1_id, res1_id))
-
-    cursor.execute('''
-        INSERT INTO results (programme_id, published, notes, telegram_sent)
-        VALUES (2, 1, 'Mesmerizing performances on Stage 1', 1)
-    ''')
-    res2_id = cursor.lastrowid
-    cursor.execute('''
-        INSERT INTO result_winners (result_id, position, student_id, chest_no, student_name, house_id, grade, points_awarded)
-        VALUES 
-        (?, 1, 3, '103', 'Fathima Nihala', 3, 'A', 10),
-        (?, 2, 1, '101', 'Aadhya Sharma', 1, 'A', 8),
-        (?, 3, 4, '104', 'Devanand K', 4, 'A', 6)
-    ''', (res2_id, res2_id, res2_id))
-
-    cursor.execute('''
-        INSERT INTO results (programme_id, published, notes, telegram_sent)
-        VALUES (4, 1, 'Junior category water colour competition', 1)
-    ''')
-    res3_id = cursor.lastrowid
-    cursor.execute('''
-        INSERT INTO result_winners (result_id, position, student_id, chest_no, student_name, house_id, grade, points_awarded)
-        VALUES 
-        (?, 1, 5, '105', 'Ananya Menon', 1, 'A', 10),
-        (?, 2, 6, '106', 'Bilal Ahmed', 2, 'B', 6),
-        (?, 3, 4, '104', 'Devanand K', 4, 'B', 4)
-    ''', (res3_id, res3_id, res3_id))
-
-    # Announcements
-    announcements = [
-        ('Stage 2 Update', 'Mime competition is currently underway on Stage 2 (Chitralekha).', 'breaking', 1, 1),
-        ('Oppana Call Sheet', 'All participating teams for Oppana must report to Green Room 1 by 4:00 PM.', 'urgent', 1, 1),
-        ('Welcome to MUBARAZA', 'Live scores and results are updated in real-time. Follow our Telegram channel for live alerts!', 'normal', 1, 1)
-    ]
-    for a in announcements:
-        cursor.execute('''
-            INSERT INTO announcements (title, content, priority, show_ticker, sent_telegram)
-            VALUES (?, ?, ?, ?, ?)
-        ''', a)
-
     conn.commit()
-    recalculate_house_points_conn(conn)
-
-def recalculate_house_points():
-    conn = get_db()
-    recalculate_house_points_conn(conn)
-    conn.close()
-
-def recalculate_house_points_conn(conn):
-    cursor = conn.cursor()
-    cursor.execute('UPDATE houses SET points = 0')
-    
-    cursor.execute('''
-        SELECT rw.house_id, SUM(rw.points_awarded) as total_points
-        FROM result_winners rw
-        JOIN results r ON rw.result_id = r.id
-        WHERE r.published = 1
-        GROUP BY rw.house_id
-    ''')
-    rows = cursor.fetchall()
-    for row in rows:
-        house_id = row['house_id'] if isinstance(row, sqlite3.Row) else row[0]
-        points = row['total_points'] if isinstance(row, sqlite3.Row) else row[1]
-        cursor.execute('UPDATE houses SET points = ? WHERE id = ?', (points or 0, house_id))
-    
-    conn.commit()
-
-if __name__ == '__main__':
-    init_db()
-    print("Database initialized and synced with .env successfully!")
