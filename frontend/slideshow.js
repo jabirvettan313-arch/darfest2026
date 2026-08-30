@@ -261,8 +261,12 @@ app.renderSlideView = async function() {
 
 
     // --- POPUP LOGIC FOR NEW RESULTS ---
-    if (app.lastSeenResultId === undefined && recentResults.length > 0) {
-        app.lastSeenResultId = recentResults[0].result_id;
+    if (app.lastSeenResultId === undefined) {
+        if (recentResults && recentResults.length > 0) {
+            app.lastSeenResultId = recentResults[0].result_id;
+        } else if (recentResults && recentResults.length === 0) {
+            app.lastSeenResultId = 0;
+        }
     }
     
     if (app.pollInterval) clearInterval(app.pollInterval);
@@ -361,9 +365,7 @@ app.renderSlideView = async function() {
                 for(let r of latest) {
                     if (app.lastSeenResultId !== undefined && r.result_id > app.lastSeenResultId) {
                         newResults.push(r);
-                    } else if (app.lastSeenResultId === undefined) {
-                        break;
-                    } else if (r.result_id <= app.lastSeenResultId) {
+                    } else {
                         break;
                     }
                 }
@@ -371,7 +373,8 @@ app.renderSlideView = async function() {
                 if (newResults.length > 0) {
                     // Queue them in reverse (oldest first) so they display in order of announcement
                     newResults.reverse().forEach(nr => app.popupQueue.push(nr));
-                    app.lastSeenResultId = Math.max(...newResults.map(r => r.result_id), app.lastSeenResultId);
+                    const maxNew = Math.max(...newResults.map(r => r.result_id));
+                    app.lastSeenResultId = Math.max(maxNew, app.lastSeenResultId || 0);
                 }
                 
                 // Show popup if queue has items and none showing currently
