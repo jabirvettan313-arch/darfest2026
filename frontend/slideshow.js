@@ -13,13 +13,13 @@ app.renderSlideView = async function() {
     let recentResults = [];
     
     try {
-        const fRes = await fetch('/api/fest/info').then(r=>r.json());
+        const fRes = await fetch('/api/fest/info?t=' + Date.now()).then(r=>r.json());
         if(fRes.success) festInfo = fRes;
         
-        const hRes = await fetch('/api/leaderboard').then(r=>r.json());
+        const hRes = await fetch('/api/leaderboard?t=' + Date.now()).then(r=>r.json());
         if(hRes.success) houses = hRes.leaderboard;
 
-        const rRes = await fetch('/api/results').then(r=>r.json());
+        const rRes = await fetch('/api/results?t=' + Date.now()).then(r=>r.json());
         if(rRes.success) recentResults = rRes.results.slice(0, 8); // Top 8 results
     } catch(e) {
         console.error(e);
@@ -127,11 +127,11 @@ app.renderSlideView = async function() {
             <div class="slide absolute inset-0 flex flex-col items-center justify-center opacity-0 transition-opacity duration-1000 bg-slate-950 p-8 z-10">
                 <div class="absolute inset-0 bg-gradient-to-b from-indigo-900/30 to-slate-950"></div>
                 <div class="relative z-10 flex flex-col items-center w-full max-w-5xl">
-                    <span class="px-4 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-sm tracking-widest uppercase mb-6 animate-pulse border border-emerald-500/30">Just Announced</span>
-                    <h2 class="font-display font-black text-5xl sm:text-7xl text-white mb-4 text-center leading-tight drop-shadow-2xl">${topResult.programme_name}</h2>
-                    <p class="text-xl text-slate-400 uppercase font-bold mb-16 tracking-widest">${topResult.category_name} &bull; ${topResult.format}</p>
+                    <span class="px-4 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-sm tracking-widest uppercase mb-6 animate-pulse border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]">Just Announced</span>
+                    <h2 class="font-display font-bold text-4xl sm:text-5xl md:text-6xl text-white mb-3 text-center leading-snug drop-shadow-2xl px-4">${topResult.programme_name}</h2>
+                    <p class="text-lg md:text-xl text-slate-300 uppercase font-bold mb-12 tracking-widest bg-slate-800/50 px-6 py-2 rounded-full border border-slate-700/50">${topResult.category_name} &bull; ${topResult.format}</p>
                     
-                    <div class="flex flex-wrap justify-center gap-8 w-full items-end">
+                    <div class="flex flex-wrap justify-center gap-6 md:gap-10 w-full items-end">
                         ${topResult.winners.slice(0, 3).map((w, idx) => {
                             const isFirst = idx === 0;
                             const height = isFirst ? 'h-64' : 'h-52';
@@ -277,14 +277,14 @@ app.renderSlideView = async function() {
         if (app.slideInterval) clearInterval(app.slideInterval);
         
         const popupHtml = `
-            <div id="newResultPopup" class="fixed inset-0 z-[100] flex flex-col items-center justify-center opacity-0 transition-opacity duration-1000 bg-slate-950 p-8">
+            <div id="newResultPopup" class="fixed inset-0 z-[100] flex flex-col items-center justify-center opacity-0 transition-opacity duration-1000 bg-slate-950 p-4 md:p-8 overflow-hidden">
                 <div class="absolute inset-0 bg-gradient-to-b from-indigo-900/40 to-slate-950"></div>
-                <div class="relative z-10 flex flex-col items-center w-full max-w-5xl scale-95 transition-transform duration-1000" id="newResultPopupContent">
+                <div class="relative z-10 flex flex-col items-center w-full max-w-[95%] xl:max-w-7xl scale-95 transition-transform duration-1000" id="newResultPopupContent">
                     <span class="px-5 py-2 rounded-full bg-emerald-500/20 text-emerald-400 font-black text-sm tracking-widest uppercase mb-6 animate-pulse border border-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.5)]">🚨 New Result Just Announced 🚨</span>
-                    <h2 class="font-display font-black text-5xl sm:text-7xl text-white mb-4 text-center leading-tight drop-shadow-2xl">${result.programme_name}</h2>
-                    <p class="text-xl text-slate-400 uppercase font-bold mb-16 tracking-widest">${result.category_name} &bull; ${result.format}</p>
+                    <h2 class="font-display font-bold text-4xl sm:text-5xl md:text-6xl text-white mb-3 text-center leading-snug drop-shadow-2xl px-4">${result.programme_name}</h2>
+                    <p class="text-lg md:text-xl text-slate-300 uppercase font-bold mb-12 tracking-widest bg-slate-800/50 px-6 py-2 rounded-full border border-slate-700/50">${result.category_name} &bull; ${result.format}</p>
                     
-                    <div class="flex flex-wrap justify-center gap-8 w-full items-end">
+                    <div class="flex flex-wrap justify-center gap-6 md:gap-10 w-full items-end">
                         ${result.winners.slice(0, 3).map((w, idx) => {
                             const isFirst = idx === 0;
                             const height = isFirst ? 'h-64' : 'h-52';
@@ -358,7 +358,7 @@ app.renderSlideView = async function() {
         if (document.getElementById('newResultPopup')) return;
         
         try {
-            const rRes = await fetch('/api/results').then(r=>r.json());
+            const rRes = await fetch('/api/results?t=' + Date.now()).then(r=>r.json());
             if(rRes.success && rRes.results.length > 0) {
                 const latest = rRes.results;
                 const newResults = [];
