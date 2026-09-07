@@ -1,6 +1,13 @@
 module.exports = {
   darkMode: 'class',
   content: ["./frontend/**/*.{html,js}"],
+
+  safelist: [
+    'bg-blue-500', 'from-blue-500', 'to-blue-700', 'to-indigo-600',
+    'bg-green-500', 'from-green-500', 'to-green-700',
+    'bg-red-500', 'from-red-500', 'to-rose-600',
+    'bg-emerald-500', 'from-emerald-500', 'to-teal-600'
+  ],
   theme: {
     extend: {
       colors: {

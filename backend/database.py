@@ -198,8 +198,8 @@ def sync_env_to_settings(cursor, conn):
 def seed_default_data(cursor, conn):
     # Default Houses
     houses = [
-        ('Ruby Royals', 'RUBY', '#ef4444', 'bg-red-500', 'from-red-500 to-rose-600', 'gem'),
-        ('Emerald Eagles', 'EMERALD', '#10b981', 'bg-emerald-500', 'from-emerald-500 to-teal-600', 'sparkles')
+        ('CORDOVA', 'CORDOVA', '#3b82f6', 'bg-blue-500', 'from-blue-500 to-blue-700', 'shield'),
+        ('BUKHARA', 'BUKHARA', '#22c55e', 'bg-green-500', 'from-green-500 to-green-700', 'star')
     ]
     for h in houses:
         cursor.execute('''
