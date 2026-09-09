@@ -219,16 +219,45 @@ def seed_default_data(cursor, conn):
 
     # Seed Some Initial Programmes
     programmes = [
-        ('PRG-101', 'Classical Music Vocal', 3, 'On-Stage', 'Solo', 'Stage 1 (Kalanikethan)', '2026-08-25', '10:00 AM', 'Results Declared', 5, 3, 1, 5, 3, 1),
-        ('PRG-102', 'Bharatanatyam', 3, 'On-Stage', 'Solo', 'Stage 1 (Kalanikethan)', '2026-08-25', '11:30 AM', 'Results Declared', 5, 3, 1, 5, 3, 1),
-        ('PRG-103', 'Mime', 4, 'On-Stage', 'Group', 'Stage 2 (Chitralekha)', '2026-08-25', '02:00 PM', 'Ongoing', 10, 6, 2, 5, 3, 1),
-        ('PRG-104', 'Water Colour Painting', 2, 'Off-Stage', 'Solo', 'Hall A (Art Wing)', '2026-08-25', '09:30 AM', 'Results Declared', 5, 3, 1, 5, 3, 1),
-        ('PRG-105', 'Pencil Drawing', 1, 'Off-Stage', 'Solo', 'Hall B (Design Lab)', '2026-08-25', '11:00 AM', 'Completed', 5, 3, 1, 5, 3, 1),
-        ('PRG-106', 'Oppana', 3, 'On-Stage', 'Group', 'Main Auditorium', '2026-08-25', '04:30 PM', 'Upcoming', 10, 6, 2, 5, 3, 1),
-        ('PRG-107', 'English Elocution', 3, 'On-Stage', 'Solo', 'Seminar Hall 1', '2026-08-25', '01:30 PM', 'Results Declared', 5, 3, 1, 5, 3, 1),
-        ('PRG-108', 'Duffmuttu', 4, 'On-Stage', 'Group', 'Open Stage', '2026-08-25', '06:00 PM', 'Upcoming', 10, 6, 2, 5, 3, 1)
+        # Sub-Junior On-Stage
+        ('PRG-SJ01', 'ഖിറാഅത്ത് (3 മിനുട്ട്)', 1, 'On-Stage', 'Solo', 'Stage 1', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+        ('PRG-SJ02', 'വാഅ്ള് (8 മിനുട്ട്)', 1, 'On-Stage', 'Solo', 'Stage 1', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+        ('PRG-SJ03', 'മാലപ്പാട്ട് (4 മിനുട്ട്)', 1, 'On-Stage', 'Solo', 'Stage 1', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+        ('PRG-SJ04', 'കഥ പറച്ചിൽ (4 മിനുട്ട്)', 1, 'On-Stage', 'Solo', 'Stage 1', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+        ('PRG-SJ05', 'മദ്ഹ്ഗാനം (4 മിനുട്ട്)', 1, 'On-Stage', 'Solo', 'Stage 1', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+        ('PRG-SJ06', 'മലയാള സമൂഹ ഗാനം (5 മിനുട്ട്)', 1, 'On-Stage', 'Group', 'Stage 1', '2026-08-25', '10:00 AM', 'Upcoming', 10, 6, 2, 5, 3, 1),
+
+        # Sub-Junior Off-Stage
+        ('PRG-SJ07', 'ചിത്രരചന (വാട്ടർ കളർ) (45 മിനുട്ട്)', 1, 'Off-Stage', 'Solo', 'Hall A', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+        ('PRG-SJ08', 'റൂബിക്സ് ക്യൂബ് (30 മിനുട്ട്)', 1, 'Off-Stage', 'Solo', 'Hall A', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+        ('PRG-SJ09', 'സുഡോക്കു (30 മിനുട്ട്)', 1, 'Off-Stage', 'Solo', 'Hall A', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+        ('PRG-SJ10', 'മെമ്മറി ടെസ്റ്റ് (3 മിനുട്ട്)', 1, 'Off-Stage', 'Solo', 'Hall A', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+        ('PRG-SJ11', 'ഖത്തുമത്സരം (10 മിനുട്ട്)', 1, 'Off-Stage', 'Solo', 'Hall A', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+        ('PRG-SJ12', 'കയ്യെഴുത്ത് (മലയാളം) (4 മിനുട്ട്)', 1, 'Off-Stage', 'Solo', 'Hall A', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+        ('PRG-SJ13', 'പോസ്റ്റർ ഡിസൈനിംഗ് (40 മിനുട്ട്)', 1, 'Off-Stage', 'Solo', 'Hall A', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+
+        # Junior On-Stage
+        ('PRG-J01', 'ഖിറാഅത്ത് (3 മിനുട്ട്)', 2, 'On-Stage', 'Solo', 'Stage 1', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+        ('PRG-J02', 'വാഅ്ള് (8 മിനുട്ട്)', 2, 'On-Stage', 'Solo', 'Stage 1', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+        ('PRG-J03', 'ഗാനം അറബി (4 മിനുട്ട്)', 2, 'On-Stage', 'Solo', 'Stage 1', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+        ('PRG-J04', 'കഥ പറച്ചിൽ (4 മിനുട്ട്)', 2, 'On-Stage', 'Solo', 'Stage 1', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+        ('PRG-J05', 'പദപ്പയറ്റ് അറബി', 2, 'On-Stage', 'Solo', 'Stage 1', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+        ('PRG-J06', 'പദപ്പയറ്റ് ഇംഗ്ലീഷ്', 2, 'On-Stage', 'Solo', 'Stage 1', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+        ('PRG-J07', 'മദ്ഹ്ഗാനം (4 മിനുട്ട്)', 2, 'On-Stage', 'Solo', 'Stage 1', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+        ('PRG-J08', 'മലയാള സമൂഹ ഗാനം (5 മിനുട്ട്)', 2, 'On-Stage', 'Group', 'Stage 1', '2026-08-25', '10:00 AM', 'Upcoming', 10, 6, 2, 5, 3, 1),
+
+        # Junior Off-Stage
+        ('PRG-J09', 'ചിത്രരചന (വാട്ടർ കളർ) (45 മിനുട്ട്)', 2, 'Off-Stage', 'Solo', 'Hall B', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+        ('PRG-J10', 'റൂബിക്സ് ക്യൂബ് (30 മിനുട്ട്)', 2, 'Off-Stage', 'Solo', 'Hall B', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+        ('PRG-J11', 'സുഡോക്കു (30 മിനുട്ട്)', 2, 'Off-Stage', 'Solo', 'Hall B', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+        ('PRG-J12', 'മെമ്മറി ടെസ്റ്റ് (3 മിനുട്ട്)', 2, 'Off-Stage', 'Solo', 'Hall B', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+        ('PRG-J13', 'ഖത്തുമത്സരം (10 മിനുട്ട്)', 2, 'Off-Stage', 'Solo', 'Hall B', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+        ('PRG-J14', 'കയ്യെഴുത്ത് (മലയാളം) (4 മിനുട്ട്)', 2, 'Off-Stage', 'Solo', 'Hall B', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+        ('PRG-J15', 'പോസ്റ്റർ ഡിസൈനിംഗ് (40 മിനുട്ട്)', 2, 'Off-Stage', 'Solo', 'Hall B', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1),
+        ('PRG-J16', 'മലയാള പ്രബന്ധം (30 മിനുട്ട്)', 2, 'Off-Stage', 'Solo', 'Hall B', '2026-08-25', '10:00 AM', 'Upcoming', 5, 3, 1, 5, 3, 1)
     ]
     for p in programmes:
+
         cursor.execute('''
             INSERT INTO programmes (code, name, category_id, type, format, stage_name, scheduled_date, scheduled_time, status, first_points, second_points, third_points, grade_a_points, grade_b_points, grade_c_points)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
