@@ -713,6 +713,26 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
                 self.send_json({"success": True, "announcements": announcements})
                 return
 
+
+            # GET /api/admin/backup
+            if path == '/api/admin/backup':
+                if not self.is_admin():
+                    self.send_error_json("Unauthorized", 401)
+                    return
+                db_path = DB_PATH
+                import os
+                if os.path.exists(db_path):
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/x-sqlite3')
+                    self.send_header('Content-Disposition', 'attachment; filename="artfest_backup.db"')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    with open(db_path, 'rb') as db_file:
+                        self.wfile.write(db_file.read())
+                else:
+                    self.send_error_json("Database not found", 404)
+                return
+
             # GET /api/admin/telegram/config
             if path == '/api/admin/telegram/config':
                 if not self.is_admin():
@@ -819,6 +839,23 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
                     self.send_json({"success": True, "student_id": student_id, "message": "Student added successfully"})
                 except Exception as e:
                     self.send_error_json(f"Could not add student: {str(e)}", 400)
+                return
+
+
+            # POST /api/admin/restore
+            if path == '/api/admin/restore':
+                if not self.is_admin():
+                    self.send_error_json("Unauthorized", 401)
+                    return
+                content_length = int(self.headers.get('Content-Length', 0))
+                if content_length > 0:
+                    file_data = self.rfile.read(content_length)
+                    import os
+                    with open(DB_PATH, 'wb') as db_file:
+                        db_file.write(file_data)
+                    self.send_json({"success": True, "message": "Database restored successfully!"})
+                else:
+                    self.send_error_json("No file data received", 400)
                 return
 
             # POST /api/admin/programmes

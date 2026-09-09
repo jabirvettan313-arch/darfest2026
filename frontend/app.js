@@ -2967,6 +2967,29 @@ const app = {
             </div>
           </form>
         </div>
+
+        <div class="glass-panel p-6 rounded-3xl border shadow-xl space-y-4 text-left border-amber-500/30">
+          <h2 class="font-display font-black text-lg text-amber-400 flex items-center gap-2">
+            <i data-lucide="database" class="w-5 h-5"></i> Database Backup & Restore
+          </h2>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Since your server is on a free plan, code updates will erase your database. 
+            <strong>Always download a backup</strong> before making code updates, and restore it here afterwards!
+          </p>
+          <div class="flex flex-col gap-3 pt-2">
+            <button type="button" onclick="app.downloadBackup()" class="w-full px-5 py-3 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/50 text-sm font-black rounded-2xl text-center flex items-center justify-center gap-2 transition">
+              <i data-lucide="download" class="w-4 h-4"></i> Download Database Backup
+            </button>
+            
+            <div class="relative w-full">
+              <input type="file" id="dbRestoreFile" accept=".db,.sqlite,.sqlite3" onchange="app.restoreDatabase(this)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+              <div class="w-full px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 text-sm font-black rounded-2xl text-center flex items-center justify-center gap-2 transition cursor-pointer pointer-events-none">
+                <i data-lucide="upload" class="w-4 h-4"></i> Upload & Restore Database
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     `;
   },
@@ -2994,6 +3017,58 @@ const app = {
     } catch (e) {
       this.showToast('Failed to save settings', 'error');
     }
+  },
+
+
+
+  async downloadBackup() {
+    try {
+      this.showToast('Downloading backup...', 'success');
+      const res = await fetch('/api/admin/backup', {
+        headers: { 'X-Admin-Pin': this.state.adminToken }
+      });
+      if (!res.ok) throw new Error('Failed to download');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `artfest_backup_${new Date().getTime()}.db`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      this.showToast('Download failed', 'error');
+    }
+  },
+
+  async restoreDatabase(input) {
+
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    
+    if (!confirm('WARNING: This will overwrite your entire current database. Are you absolutely sure?')) {
+      input.value = '';
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/admin/restore', {
+        method: 'POST',
+        headers: { 'X-Admin-Pin': this.state.adminToken },
+        body: file
+      }).then(r => r.json());
+
+      if (res.success) {
+        this.showToast('Database restored successfully! Refreshing...', 'success');
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        this.showToast(res.error || 'Failed to restore', 'error');
+      }
+    } catch (e) {
+      this.showToast('Upload failed', 'error');
+    }
+    input.value = '';
   },
 
   // ==========================================
