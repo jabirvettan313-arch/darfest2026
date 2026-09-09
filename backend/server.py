@@ -304,9 +304,10 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
                 for res_r in results_rows:
                     res_obj = dict(res_r)
                     cursor.execute('''
-                        SELECT rw.*, h.name as house_name, h.color as house_color, h.badge_color as house_badge, h.bg_gradient as house_gradient
+                        SELECT rw.*, h.name as house_name, h.color as house_color, h.badge_color as house_badge, h.bg_gradient as house_gradient, s.photo_url
                         FROM result_winners rw
                         LEFT JOIN houses h ON rw.house_id = h.id
+                        LEFT JOIN students s ON (rw.student_id = s.id OR rw.chest_no = s.chest_no)
                         WHERE rw.result_id = ?
                         ORDER BY rw.position ASC
                     ''', (res_r['result_id'],))
@@ -604,9 +605,10 @@ class ArtFestHandler(http.server.BaseHTTPRequestHandler):
                 for r in results_rows:
                     res_obj = dict(r)
                     cursor.execute('''
-                        SELECT rw.*, h.name as house_name, h.color as house_color, h.badge_color as house_badge, h.bg_gradient as house_gradient
+                        SELECT rw.*, h.name as house_name, h.color as house_color, h.badge_color as house_badge, h.bg_gradient as house_gradient, s.photo_url
                         FROM result_winners rw
                         LEFT JOIN houses h ON rw.house_id = h.id
+                        LEFT JOIN students s ON (rw.student_id = s.id OR rw.chest_no = s.chest_no)
                         WHERE rw.result_id = ?
                         ORDER BY rw.position ASC
                     ''', (r['result_id'],))

@@ -1112,7 +1112,7 @@ const app = {
       const modal = document.getElementById('posterModal');
       if (modal) modal.classList.remove('hidden');
 
-      this.drawResultPoster(target);
+      await this.drawResultPoster(target);
       lucide.createIcons();
     } catch (e) {}
   },
@@ -1122,7 +1122,7 @@ const app = {
     if (modal) modal.classList.add('hidden');
   },
 
-  drawResultPoster(r) {
+  async drawResultPoster(r) {
     const canvas = document.getElementById('resultPosterCanvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -1183,7 +1183,16 @@ const app = {
       { pos: 3, label: '3RD PLACE (THIRD PRIZE)', color: '#fdba74', bg: 'rgba(194, 65, 12, 0.12)', border: '#c2410c' }
     ];
 
-    rankConfigs.forEach((rc, idx) => {
+    const loadImage = (url) => new Promise(resolve => {
+        const img = new Image();
+        img.crossOrigin = "Anonymous";
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = url;
+    });
+
+    for (let idx = 0; idx < rankConfigs.length; idx++) {
+      const rc = rankConfigs[idx];
       const winner = winners.find(w => w.position === rc.pos);
       const cardY = startY + (idx * 165);
 
@@ -1196,24 +1205,51 @@ const app = {
       ctx.stroke();
 
       if (winner) {
+        // Draw Image Circle
+        const photoUrl = winner.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(winner.student_name)}&background=1e293b&color=cbd5e1&size=200`;
+        const img = await loadImage(photoUrl);
+        
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(140, cardY + 70, 50, 0, Math.PI * 2, true);
+        ctx.closePath();
+        ctx.clip();
+
+        if (img) {
+            ctx.drawImage(img, 90, cardY + 20, 100, 100);
+        } else {
+            ctx.fillStyle = '#1e293b';
+            ctx.fill();
+        }
+        
+        ctx.restore();
+        // Circle border
+        ctx.beginPath();
+        ctx.arc(140, cardY + 70, 50, 0, Math.PI * 2, true);
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = rc.border;
+        ctx.stroke();
+
+        // Badge
         ctx.fillStyle = rc.border;
         ctx.beginPath();
-        ctx.roundRect(90, cardY + 20, 220, 28, 8);
+        ctx.roundRect(220, cardY + 20, 220, 28, 8);
         ctx.fill();
 
         ctx.fillStyle = '#0f172a';
         ctx.font = 'bold 13px "Outfit", sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(rc.label, 200, cardY + 39);
+        ctx.fillText(rc.label, 330, cardY + 39);
 
+        // Text Info
         ctx.textAlign = 'left';
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 24px "Outfit", sans-serif';
-        ctx.fillText(winner.student_name, 90, cardY + 82);
+        ctx.fillText(winner.student_name, 220, cardY + 82);
 
         ctx.fillStyle = '#cbd5e1';
         ctx.font = '15px "Plus Jakarta Sans", sans-serif';
-        ctx.fillText(`Chest #${winner.chest_no}   •   House: ${winner.house_name}`, 90, cardY + 112);
+        ctx.fillText(`Chest #${winner.chest_no}   •   Team: ${winner.house_name}`, 220, cardY + 112);
 
         if (winner.grade && winner.grade !== 'None') {
           ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
@@ -1237,7 +1273,7 @@ const app = {
         ctx.font = 'italic 16px "Plus Jakarta Sans", sans-serif';
         ctx.fillText(`${rc.label} — Withheld / No Participant`, 400, cardY + 80);
       }
-    });
+    }
 
     ctx.textAlign = 'center';
     ctx.fillStyle = '#64748b';
