@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 .DS_Store
 bin/
+backend/artfest.db
+backend/artfest.db
